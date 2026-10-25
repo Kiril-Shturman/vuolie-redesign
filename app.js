@@ -319,3 +319,6 @@ gallery.forEach((button,i)=>button.addEventListener('click',()=>{showImage(i);li
 };
  if('IntersectionObserver' in window){const io=new IntersectionObserver(e=>{if(e[0].isIntersecting){io.disconnect();init();}},{rootMargin:'300px'});io.observe(el);}else init();
 })();
+
+// ---- Bridge for the 3D model (assets/model3d.js) ----
+window.vuolie={plots,isSold,priceOf,money,fmt,ANOMALY,select:id=>selectPlot(id,{via:'3d'}),request:()=>openRequest('selected','3d'),isFav:id=>favorites.includes(id),toggleFav:id=>toggleFavorite(id)};
