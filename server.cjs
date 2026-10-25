@@ -2,8 +2,8 @@
 'use strict';
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path');
 const root=__dirname;const port=Number(process.env.PORT||4173);
-const allowed=new Set(['index.html','app.js','style.css','assets/hero.jpeg','assets/lake.jpeg','assets/forest.jpeg','assets/shore.jpeg','assets/masterplan.webp','assets/masterplan-soft.webp','assets/forest-bg.webp','assets/plots.json',...fs.readdirSync(path.join(__dirname,'assets/fonts')).map(f=>'assets/fonts/'+f)]);
-const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.jpeg':'image/jpeg','.webp':'image/webp','.json':'application/json','.woff2':'font/woff2'};
+const allowed=new Set(['index.html','app.js','style.css','assets/hero.jpeg','assets/lake.jpeg','assets/forest.jpeg','assets/shore.jpeg','assets/masterplan.webp','assets/logo.svg','assets/masterplan-soft.webp','assets/forest-bg.webp','assets/plots.json',...fs.readdirSync(path.join(__dirname,'assets/fonts')).map(f=>'assets/fonts/'+f)]);
+const types={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.jpeg':'image/jpeg','.webp':'image/webp','.json':'application/json','.woff2':'font/woff2','.svg':'image/svg+xml'};
 http.createServer((req,res)=>{
  if(!['GET','HEAD'].includes(req.method)){res.writeHead(405,{'Allow':'GET, HEAD'});return res.end();}
  let name;try{name=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1)||'index.html';}catch{res.writeHead(400);return res.end();}

@@ -7,6 +7,7 @@ All rights remain with the original rightsholders; no license is granted by this
 - `assets/lake.jpeg`: https://static.tildacdn.com/tild3165-6362-4364-a336-356238346365/DSCF5936.jpeg
 - `assets/forest.jpeg`: https://static.tildacdn.com/tild3230-3734-4265-a630-386531373131/DSCF5942_1.jpeg
 - `assets/shore.jpeg`: https://static.tildacdn.com/tild6135-6661-4163-b039-663763313635/DSCF5993_1___3.jpeg
+- `assets/logo.svg`: https://static.tildacdn.com/tild3563-3835-4263-b262-333632366433/Logo.svg (знак из шапки vuolie.ru)
 - `assets/masterplan.webp`: background image used by the official masterplan SVG
   (https://xn------dddcblgdajxc3eibqmgpr.xn--p1ai/wp-content/uploads/2026/01/map4-scaled.webp).
 - `assets/plots.json`: 233 plot IDs, polygon coordinates and areas from the public inline masterplan data

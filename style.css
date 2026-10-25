@@ -531,3 +531,9 @@ html.fs-lock,html.fs-lock body{overflow:hidden;overscroll-behavior:none}
 .map-card>.map-overlay-controls,.map-card>.map-legend,.map-card>.map-hint,.map-card>.map-open,.map-card>.fs-bar{z-index:12}
 @media(max-width:760px){.poi-row{flex-wrap:nowrap}.poi-row .ex-label{display:none}.poi-card{width:210px}.poi-card img{height:110px}}
 .plot.active text{fill:#1d1606}
+/* brand: original vuolie.ru mark */
+.brand{display:inline-flex;align-items:center;gap:10px;font-family:var(--sans);letter-spacing:.02em;line-height:1}
+.brand img{width:30px;height:31px;flex:none}
+.brand b{font-family:var(--sans);font-size:21px;font-weight:700;letter-spacing:.04em;color:var(--ink)}
+footer .brand b{font-size:19px}
+@media(max-width:760px){.brand img{width:26px;height:27px}.brand b{font-size:18px}}
