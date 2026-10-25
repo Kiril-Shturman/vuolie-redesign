@@ -556,3 +556,14 @@ video.hero-bg{width:100%;object-fit:cover;transform:none}
  .hero-facts strong{font-size:22px}.hero-facts li{padding:10px 10px 10px 0}
  .hero-note{font-size:10px}
 }
+/* hero intro sequence */
+.hero.intro:before{opacity:0;transition:opacity 1.4s ease}
+.hero.intro.show-copy:before{opacity:1}
+.hero.intro .hero-copy>*,.hero.intro .hero-card,.hero.intro .hero-note{opacity:0;transform:translateY(24px);visibility:hidden;transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1),visibility 0s .9s}
+.hero.intro.show-copy .hero-copy>*{opacity:1;transform:none;visibility:visible;transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1),visibility 0s}
+.hero.intro.show-copy .hero-copy>:nth-child(2){transition-delay:.15s}
+.hero.intro.show-copy .hero-copy>:nth-child(3){transition-delay:.35s}
+.hero.intro.show-copy .hero-copy>:nth-child(4){transition-delay:.55s}
+.hero.intro.show-copy .hero-copy>:nth-child(5){transition-delay:.75s}
+.hero.intro.show-form .hero-card,.hero.intro.show-form .hero-note{opacity:1;transform:none;visibility:visible;transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1),visibility 0s}
+@media(prefers-reduced-motion:reduce){.hero.intro .hero-copy>*,.hero.intro .hero-card,.hero.intro .hero-note{opacity:1;transform:none;visibility:visible}.hero.intro:before{opacity:1}}

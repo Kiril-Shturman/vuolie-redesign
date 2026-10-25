@@ -24,7 +24,7 @@ const ids=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);
 for(const m of html.matchAll(/(?:src|href)="([^"#][^"]*)"/g)){if(/^(https?|data):/.test(m[1]))continue;const f=m[1].split('?')[0];check('local asset '+f,()=>assert(fs.existsSync(path.join(__dirname,f)),f+' missing'));}
 for(const m of html.matchAll(/href="#([^"]+)"/g))check('anchor '+m[1],()=>assert(ids.includes(m[1]),'missing anchor '+m[1]));
 check('every $(#id) used in app.js exists',()=>{for(const m of js.matchAll(/\$\('#([\w-]+)/g))assert(ids.includes(m[1]),'#'+m[1]+' missing in HTML');});
-check('section order',()=>{const order=['class="hero"','id="about"','id="genplan"','id="infra"','id="installment"','id="quiz"','id="location"','id="place"','id="faq"','class="closing"'].map(s=>html.indexOf(s));assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])));});
+check('section order',()=>{const order=['class="hero intro"','id="about"','id="genplan"','id="infra"','id="installment"','id="quiz"','id="location"','id="place"','id="faq"','class="closing"'].map(s=>html.indexOf(s));assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])));});
 check('double-ended price range + numeric inputs',()=>{for(const id of ['price-min','price-max','price-min-input','price-max-input'])assert(ids.includes(id));assert(js.includes('PRICE_LOW=Math.min(...trustedPrices)'));});
 
 // Leads: forms present, endpoint configurable, disclosures kept.

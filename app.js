@@ -292,3 +292,18 @@ requestAnimationFrame(()=>{if(view==='map')initialCamera();});
 const gallery=$$('.gallery-item'),lightbox=$('#lightbox');let imageIndex=0;
 function showImage(index){imageIndex=(index+gallery.length)%gallery.length;const source=gallery[imageIndex];$('#lightbox-image').src=source.dataset.image;$('#lightbox-image').alt=source.querySelector('img').alt;$('#lightbox-caption').textContent=source.dataset.title+' · '+(imageIndex+1)+' / '+gallery.length;}
 gallery.forEach((button,i)=>button.addEventListener('click',()=>{showImage(i);lightbox.showModal();}));$('#close-lightbox').addEventListener('click',()=>lightbox.close());lightbox.addEventListener('click',e=>{if(e.target===lightbox)lightbox.close();});$('#previous-image').addEventListener('click',()=>showImage(imageIndex-1));$('#next-image').addEventListener('click',()=>showImage(imageIndex+1));lightbox.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();showImage(imageIndex+1);}if(e.key==='ArrowLeft'){e.preventDefault();showImage(imageIndex-1);}});
+
+// ---- Hero intro: clouds only → text after clouds part → form at the end ----
+(()=>{const hero=$('.hero'),v=$('video.hero-bg');if(!hero)return;
+ const COPY_AT=3.6,FORM_AT=11.2;let copy=false,form=false;
+ const showCopy=()=>{if(!copy){copy=true;hero.classList.add('show-copy');}};
+ const showForm=()=>{showCopy();if(!form){form=true;hero.classList.add('show-form');}};
+ const all=()=>{showCopy();showForm();};
+ if(!v||reducedMotion()){all();return;}
+ v.addEventListener('timeupdate',()=>{if(v.currentTime>=COPY_AT)showCopy();if(v.currentTime>=FORM_AT)showForm();});
+ v.addEventListener('ended',showForm);v.addEventListener('error',all);
+ // autoplay blocked / slow network: don't hide content forever
+ setTimeout(()=>{if(v.paused&&v.currentTime<.1)all();},2500);setTimeout(all,16000);
+ // user scrolls past or focuses a field → show everything
+ addEventListener('scroll',()=>{if(scrollY>120)all();},{passive:true});hero.addEventListener('focusin',all);
+})();
