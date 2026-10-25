@@ -23,3 +23,4 @@ Plot 78 is listed at 210 000 ₽ in the source (likely 2 100 000 ₽); it is pre
 and excluded from the advertised minimum and from narrowed budget results.
 
 - `assets/hero.mp4`, `assets/hero-poster.jpg`: AI-generated (Grok Imagine Video 1.5 Lite via OpenRouter) from owner-provided renders, 26.10.2026.
+- `assets/leaflet/`: Leaflet 1.9.4 (BSD-2). Map imagery: Esri World Imagery (attribution shown).

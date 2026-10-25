@@ -307,3 +307,15 @@ gallery.forEach((button,i)=>button.addEventListener('click',()=>{showImage(i);li
  // user scrolls past or focuses a field → show everything
  addEventListener('scroll',()=>{if(scrollY>120)all();},{passive:true});hero.addEventListener('focusin',all);
 })();
+
+// ---- Location map (Leaflet + CARTO Voyager, no ads) ----
+(()=>{const el=$('#about-map');if(!el||!window.L)return;
+ const V=[60.332164,30.570857],LAKE=[60.3403,30.5724];
+ const init=()=>{const m=L.map(el,{scrollWheelZoom:false,dragging:!L.Browser.mobile,tap:false,zoomControl:true,attributionControl:true}).setView([(V[0]+LAKE[0])/2-.0005,(V[1]+LAKE[1])/2],mobile()?14:15);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Снимки © Esri, Maxar, Earthstar Geographics'}).addTo(m);
+  const pin=L.divIcon({className:'vu-pin',html:'<div class="vu-pin-in"><img src="assets/logo.svg" alt=""></div><span>Вуолье</span>',iconSize:[52,52],iconAnchor:[26,52]});
+  L.marker(V,{icon:pin,keyboard:false}).addTo(m);
+  L.marker(LAKE,{icon:L.divIcon({className:'vu-label',html:'оз. Сиркоярви',iconSize:[120,20],iconAnchor:[60,10]}),interactive:false}).addTo(m);
+};
+ if('IntersectionObserver' in window){const io=new IntersectionObserver(e=>{if(e[0].isIntersecting){io.disconnect();init();}},{rootMargin:'300px'});io.observe(el);}else init();
+})();
