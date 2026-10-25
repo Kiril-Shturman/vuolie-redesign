@@ -544,3 +544,15 @@ footer .brand b{font-size:19px}
 video.hero-bg{width:100%;object-fit:cover;transform:none}
 .hero:before{background:linear-gradient(90deg,#0d1f17d9 0%,#0d1f1799 40%,#0d1f1720 75%),linear-gradient(0deg,#0d1f17b3 0%,transparent 40%)}
 @media(max-width:760px){.hero:before{background:linear-gradient(180deg,#0d1f1799 0%,#0d1f17cc 60%,#0d1f17f2 100%)}}
+/* mobile hero: compact glass lead form so the video is visible */
+@media(max-width:760px){
+ .hero-card{background:#0d1f1759;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border:1px solid #ffffff2e;box-shadow:none;padding:12px;border-radius:16px;color:#fff}
+ .hero-card .eyebrow,.hero-card .lead-inline-title,.hero-card .hero-card-sub{display:none}
+ .hero-card .lead-row{flex-direction:column;gap:8px}
+ .hero-card input[type=tel]{height:48px;border-color:transparent}
+ .hero-card .button{min-height:48px;padding:10px}
+ .hero-card .consent{color:#ffffffb3;font-size:11px;margin-top:8px}.hero-card .consent a{color:#fff}
+ .hero-card .lead-done{background:#ffffffe6}
+ .hero-facts strong{font-size:22px}.hero-facts li{padding:10px 10px 10px 0}
+ .hero-note{font-size:10px}
+}
