@@ -30,8 +30,8 @@ let favorites=store.get('vuolie-real-favorites',[]);if(!Array.isArray(favorites)
 const urlPlot=Number(new URLSearchParams(location.search).get('plot'));
 let selected=plotById.has(urlPlot)?urlPlot:(plotById.has(store.get('vuolie-selected',0))?store.get('vuolie-selected',0):null);
 const DEFAULTS={area:'all',min:PRICE_LOW,max:PRICE_HIGH,status:'available'};
-let filters={...DEFAULTS},visiblePlots=[],listLimit=12,view=mobile()?'list':'map';
-const PAGE=12;
+let filters={...DEFAULTS},visiblePlots=[],listLimit=15,view='map';
+const PAGE=15;
 
 // ---- Price range (double-ended slider + numeric inputs) ----
 const minRange=$('#price-min'),maxRange=$('#price-max'),minInput=$('#price-min-input'),maxInput=$('#price-max-input');
@@ -73,10 +73,12 @@ function applyFilters(source){listLimit=PAGE;visiblePlots=sortPlots(plots.filter
  renderList();ensureRoving();if(n&&(!selected||!ids.has(selected))&&source!=='init-keep'){if(!selected||source)selectPlot(visiblePlots[0].id,{quiet:true});}else updateSelectionUI();
  if(source&&source!=='init'&&source!=='init-keep'){clearTimeout(applyFilters.t);applyFilters.t=setTimeout(()=>track('filter_change',{area:filters.area,min:filters.min,max:filters.max,status:filters.status,results:n,via:source}),400);}}
 function plotCardHTML(p){const price=priceOf(p.id),sold=isSold(p.id),saved=favorites.includes(p.id),warn=p.id===ANOMALY;
- return '<li class="plot-item'+(p.id===selected?' active':'')+(sold?' sold':'')+'" data-id="'+p.id+'"><button type="button" class="plot-main" data-action="select" aria-pressed="'+(p.id===selected)+'" aria-label="Участок '+p.id+', '+fmt(p.area)+' соток, '+(price?money(price):'цена не опубликована')+(warn?', цена требует подтверждения':'')+'"><span class="pi-num">№ '+p.id+'</span><span class="pi-area">'+fmt(p.area)+' сот. · '+fmt(Math.round(p.area*100))+' м²</span><span class="pi-price">'+(price?money(price):'Цена не опубликована')+'</span><span class="pi-sub">'+(warn?'⚠ Цена не подтверждена':price?'≈ '+money(Math.round(price/p.area))+' / сот. · расчёт':'')+'</span><span class="pi-status'+(sold?' sold':'')+'">'+(sold?'Продан*':'В продаже*')+'</span></button><div class="pi-actions"><button type="button" class="pi-save" data-action="save" aria-pressed="'+saved+'" aria-label="'+(saved?'Убрать участок '+p.id+' из подборки':'Добавить участок '+p.id+' в подборку')+'">'+(saved?'♥':'♡')+'</button><button type="button" class="pi-request" data-action="request">Запросить</button></div></li>';}
-function renderList(){const items=visiblePlots.slice(0,listLimit);$('#plot-list').innerHTML=items.map(plotCardHTML).join('');const rest=visiblePlots.length-items.length;$('#more-plots').hidden=rest<=0;$('#more-plots').textContent='Показать ещё '+Math.min(PAGE,rest)+' из '+rest;}
-$('#plot-list').addEventListener('click',e=>{const btn=e.target.closest('[data-action]');if(!btn)return;const id=+btn.closest('.plot-item').dataset.id;if(btn.dataset.action==='select')selectPlot(id,{via:'list'});if(btn.dataset.action==='save'){toggleFavorite(id);const again=$('.plot-item[data-id="'+id+'"] .pi-save');if(again)again.focus();}if(btn.dataset.action==='request'){selectPlot(id,{via:'list',quiet:true});openRequest('selected','list');}});
-$('#more-plots').addEventListener('click',()=>{const first=listLimit;listLimit+=PAGE;renderList();const next=$$('#plot-list .plot-main')[first];if(next)next.focus();});
+ return '<tr class="plot-item'+(p.id===selected?' active':'')+(sold?' sold':'')+'" data-id="'+p.id+'"><td><button type="button" class="plot-main" data-action="select" aria-pressed="'+(p.id===selected)+'" aria-label="Показать участок '+p.id+' на плане">№ '+p.id+'</button></td><td>'+fmt(p.area)+' сот.</td><td class="pi-price">'+(sold?'—':price?money(price)+(warn?' ⚠':''):'—')+'</td><td class="hide-sm muted">'+(price&&!sold&&!warn?money(Math.round(price/p.area)):'')+'</td><td class="hide-sm"><span class="pi-status'+(sold?' sold':'')+'">'+(sold?'Продан':'В продаже')+'</span></td><td class="pi-actions"><button type="button" class="pi-save" data-action="save" aria-pressed="'+saved+'" aria-label="'+(saved?'Убрать из избранного':'В избранное')+'">'+(saved?'♥':'♡')+'</button>'+(sold?'':'<button type="button" class="pi-request" data-action="request">Запросить</button>')+'</td></tr>';}
+function renderList(){const items=visiblePlots.slice(0,listLimit);$('#plot-list').innerHTML=items.map(plotCardHTML).join('');const rest=visiblePlots.length-items.length;$('#more-plots').hidden=rest<=0;$('#more-plots').textContent='Показать ещё '+Math.min(PAGE*2,rest)+' из '+rest;}
+$('#plot-list').addEventListener('click',e=>{const tr=e.target.closest('.plot-item');if(!tr)return;const id=+tr.dataset.id,btn=e.target.closest('[data-action]'),act=btn?btn.dataset.action:'select';
+ if(act==='save'){toggleFavorite(id);return;}if(act==='request'){selectPlot(id,{via:'list',quiet:true});openRequest('selected','list');return;}
+ selectPlot(id,{via:'list'});locatePlot();openPop();});
+$('#more-plots').addEventListener('click',()=>{const first=listLimit;listLimit+=PAGE*2;renderList();const next=$$('#plot-list .plot-main')[first];if(next)next.focus();});
 
 // ---- Masterplan: viewBox-based zoom/pan (no scrollbars) ----
 const ns='http://www.w3.org/2000/svg',svg=$('#masterplan'),vp=$('#map-viewport');const MAP_W=3686.1,MAP_H=2326.85;
@@ -93,7 +95,7 @@ function applyCam(){const [w,h]=viewSize();cam.s=Math.min(maxScale(),Math.max(mi
  // keep the view inside the masterplan image whenever it is larger than the view (no empty bands)
  if(vw<MAP_W)cam.cx=Math.min(Math.max(cam.cx,vw/2),MAP_W-vw/2);if(vh<MAP_H)cam.cy=Math.min(Math.max(cam.cy,vh/2),MAP_H-vh/2);
  svg.setAttribute('viewBox',[cam.cx-vw/2,cam.cy-vh/2,vw,vh].map(v=>v.toFixed(2)).join(' '));svg.classList.toggle('show-labels',cam.s*21>=8.5);
- $('#zoom-in').disabled=cam.s>=maxScale()-1e-6;$('#zoom-out').disabled=cam.s<=minScale()+1e-6;}
+ positionPop();$('#zoom-in').disabled=cam.s>=maxScale()-1e-6;$('#zoom-out').disabled=cam.s<=minScale()+1e-6;}
 function fitAll(){computeFit();cam.s=fitScale;cam.cx=(bounds.x0+bounds.x1)/2;cam.cy=(bounds.y0+bounds.y1)/2;applyCam();}
 function zoomBy(f,px,py){const [w,h]=viewSize();px=px??w/2;py=py??h/2;const wx=cam.cx+(px-w/2)/cam.s,wy=cam.cy+(py-h/2)/cam.s;cam.s=Math.min(maxScale(),Math.max(minScale(),cam.s*f));cam.cx=wx-(px-w/2)/cam.s;cam.cy=wy-(py-h/2)/cam.s;applyCam();}
 function centerOn(id,minS){const c=centroids.get(id);if(!c)return;if(minS)cam.s=Math.max(cam.s,minS);cam.cx=c[0];cam.cy=c[1];applyCam();}
@@ -107,7 +109,7 @@ svg.addEventListener('pointermove',e=>{if(!drag||!pointers.has(e.pointerId))retu
  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!dragged&&Math.hypot(dx,dy)<6)return;if(!dragged){dragged=true;svg.setPointerCapture?.(e.pointerId);svg.classList.add('dragging');}cam.cx=drag.cx-dx/cam.s;cam.cy=drag.cy-dy/cam.s;applyCam();});
 const endPointer=e=>{pointers.delete(e.pointerId);if(!pointers.size){drag=null;svg.classList.remove('dragging');}else{const [p]=[...pointers.values()];drag={x:p[0],y:p[1],cx:cam.cx,cy:cam.cy,s:cam.s,dist:null};}};
 ['pointerup','pointercancel','lostpointercapture'].forEach(t=>svg.addEventListener(t,endPointer));
-svg.addEventListener('click',e=>{if(dragged){e.preventDefault();dragged=false;return;}const g=e.target.closest('.plot');if(g&&!g.classList.contains('filtered')){selectPlot(+g.dataset.id,{via:'map'});g.focus({preventScroll:true});}},true);
+svg.addEventListener('click',e=>{if(dragged){e.preventDefault();dragged=false;return;}const g=e.target.closest('.plot');if(g&&!g.classList.contains('filtered')){selectPlot(+g.dataset.id,{via:'map'});openPop();g.focus({preventScroll:true});}else closePop();},true);
 svg.addEventListener('dblclick',e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoomBy(1.8,e.clientX-r.left,e.clientY-r.top);});
 vp.addEventListener('wheel',e=>{if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();const r=vp.getBoundingClientRect();zoomBy(e.deltaY<0?1.25:.8,e.clientX-r.left,e.clientY-r.top);},{passive:false});
 vp.addEventListener('keydown',e=>{if(e.target!==vp)return;const step=80/cam.s,k=e.key;if(k==='ArrowLeft')cam.cx-=step;else if(k==='ArrowRight')cam.cx+=step;else if(k==='ArrowUp')cam.cy-=step;else if(k==='ArrowDown')cam.cy+=step;else if(k==='+'||k==='=')return e.preventDefault(),zoomBy(1.5);else if(k==='-')return e.preventDefault(),zoomBy(1/1.5);else if(k==='0')return e.preventDefault(),fitAll();else return;e.preventDefault();applyCam();});
@@ -116,7 +118,7 @@ function ensureRoving(){const visible=new Set(visiblePlots.map(p=>p.id));const t
 function neighbour(id,key){const [x,y]=centroids.get(id),dirs={ArrowRight:[1,0],ArrowLeft:[-1,0],ArrowDown:[0,1],ArrowUp:[0,-1]},[dx,dy]=dirs[key];let best=null,bestScore=Infinity;
  for(const p of visiblePlots){if(p.id===id)continue;const [px,py]=centroids.get(p.id),vx=px-x,vy=py-y,along=vx*dx+vy*dy;if(along<=4)continue;const across=Math.abs(vx*dy-vy*dx),score=along+across*2.2;if(score<bestScore){bestScore=score;best=p.id;}}return best;}
 $('#plots').addEventListener('keydown',e=>{const g=e.target.closest('.plot');if(!g)return;const id=+g.dataset.id;
- if(e.key==='Enter'||e.key===' '){e.preventDefault();selectPlot(id,{via:'map-keyboard'});return;}
+ if(e.key==='Enter'||e.key===' '){e.preventDefault();selectPlot(id,{via:'map-keyboard'});openPop();return;}
  if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();const next=neighbour(id,e.key);if(!next)return;const ng=$('.plot[data-id="'+next+'"]');g.setAttribute('tabindex','-1');ng.setAttribute('tabindex','0');if(!inView(next,60))centerOn(next);ng.focus({preventScroll:true});}});
 const focusRing=$('#focus-ring');
 $('#plots').addEventListener('focusin',e=>{const g=e.target.closest('.plot');if(!g)return;let visible=true;try{visible=g.matches(':focus-visible');}catch{}if(!visible){focusRing.setAttribute('hidden','');return;}const pts=plotById.get(+g.dataset.id).points;focusRing.querySelectorAll('polygon').forEach(p=>p.setAttribute('points',pts));focusRing.removeAttribute('hidden');if(!inView(+g.dataset.id,30))centerOn(+g.dataset.id);});
@@ -124,46 +126,72 @@ $('#plots').addEventListener('focusout',()=>{focusRing.setAttribute('hidden','')
 function locatePlot(){if(!selected)return;setView('map');computeFit();centerOn(selected,Math.max(fitScale*(mobile()?3.2:2.2),.55));const g=$('.plot[data-id="'+selected+'"]');$('#map-panel').scrollIntoView({block:mobile()?'start':'nearest',behavior:reducedMotion()?'auto':'smooth'});if(g&&!g.classList.contains('filtered')){$$('.plot').forEach(x=>x.setAttribute('tabindex','-1'));g.setAttribute('tabindex','0');g.focus({preventScroll:true});}track('plot_locate',{id:selected});}
 
 // ---- Views ----
-function setView(next,user){view=next;const list=next==='list';$('#map-panel').hidden=list;$('#list-panel').hidden=!list;$('.explorer').dataset.view=next;$('#view-map').setAttribute('aria-pressed',String(!list));$('#view-list').setAttribute('aria-pressed',String(list));if(!list){requestAnimationFrame(()=>{const s=cam.s;computeFit();if(s===1||!svg.getAttribute('viewBox'))initialCamera();else applyCam();});}if(user)track('view_change',{view:next});}
+function setView(next,user){view=next;const list=next==='list';if(list)closePop();$('#map-panel').hidden=list;$('#list-panel').hidden=!list;$('.explorer').dataset.view=next;$('#view-map').setAttribute('aria-pressed',String(!list));$('#view-list').setAttribute('aria-pressed',String(list));if(!list){requestAnimationFrame(()=>{const s=cam.s;computeFit();if(s===1||!svg.getAttribute('viewBox'))initialCamera();else applyCam();});}if(user)track('view_change',{view:next});}
 function initialCamera(){fitAll();if(mobile()&&selected){centerOn(selected,Math.max(fitScale*2.4,.45));}}
 $('#view-map').addEventListener('click',()=>setView('map',true));$('#view-list').addEventListener('click',()=>setView('list',true));
 new ResizeObserver(()=>{if(view!=='map')return;const old=fitScale;computeFit();cam.s=cam.s*(fitScale/(old||fitScale));applyCam();}).observe(vp);
 
-// ---- Selection, card, favourites ----
+// ---- Selection, popover card, favourites ----
 const jump=$('#plot-select');plots.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.id+(isSold(p.id)?' · продан':'');jump.append(o);});
-jump.addEventListener('change',()=>{selectPlot(+jump.value,{via:'jump'});if(view==='map')locatePlot();});
+jump.addEventListener('change',()=>{selectPlot(+jump.value,{via:'jump'});locatePlot();openPop();});
 function selectPlot(id,{via,quiet}={}){const p=plotById.get(Number(id));if(!p)return;selected=p.id;store.set('vuolie-selected',selected);const url=new URL(location.href);url.searchParams.set('plot',selected);history.replaceState(null,'',url);updateSelectionUI();if(!quiet)track('plot_select',{id:selected,via:via||'other'});}
-function updateSelectionUI(){const p=plotById.get(selected);$('.side').classList.toggle('no-selection',!p);
+function updateSelectionUI(){const p=plotById.get(selected);
  $$('.plot').forEach(g=>g.classList.toggle('active',+g.dataset.id===selected));$('#selection-ring').setAttribute('points',p?p.points:'');
- $$('.plot-item').forEach(li=>{const a=+li.dataset.id===selected;li.classList.toggle('active',a);li.querySelector('.plot-main').setAttribute('aria-pressed',String(a));});
- if(!p)return;ensureRoving();const sold=isSold(p.id),price=priceOf(p.id),warn=p.id===ANOMALY;jump.value=p.id;
+ $$('.plot-item').forEach(tr=>{const a=+tr.dataset.id===selected;tr.classList.toggle('active',a);tr.querySelector('.plot-main').setAttribute('aria-pressed',String(a));});
+ if(!p){closePop();return;}ensureRoving();const sold=isSold(p.id),price=priceOf(p.id),warn=p.id===ANOMALY;jump.value=p.id;
  $('#plot-number').textContent=p.id;$('#plot-area').textContent=fmt(p.area);$('#plot-metres').textContent=fmt(Math.round(p.area*100))+' м²';
- $('#plot-status').textContent=sold?'Продан · по источнику':'В продаже · по источнику';$('#plot-status').classList.toggle('sold',sold);
- $('#plot-price').textContent=price?money(price):'Не опубликована';$('#plot-price').classList.toggle('unconfirmed',warn);
- $('#price-per-area').textContent=warn?'Цена требует подтверждения':price?'≈ '+money(Math.round(price/p.area))+' за сотку · наш расчёт':'Участок отмечен проданным — можно спросить о похожих';
- $('#price-warning').hidden=!warn;$('#price-warning').textContent='В источнике указано 210 000 ₽ за весь участок — примерно в 10 раз ниже соседних участков той же площади. Возможна ошибка источника; не учитывается в бюджетном подборе. Уточните цену у продавца.';
- $('#request-plot').firstChild.textContent=sold?'Спросить о похожих участках ':'Запросить цену и просмотр ';
- $('#official-link').textContent='Сверить № '+p.id+' на vuolie.ru ↗';$('#official-link').setAttribute('aria-label','Сверить участок № '+p.id+' на официальном сайте vuolie.ru, откроется в новой вкладке');
- $('#bar-title').textContent='№ '+p.id+' · '+fmt(p.area)+' сот.';$('#bar-price').textContent=sold?'Продан*':price?money(price)+(warn?' ⚠':''):'';
- $('#closing-summary').textContent='Выбран участок № '+p.id+' · '+fmt(p.area)+' сот.'+(price?' · '+money(price)+(warn?' (не подтверждена)':''):'')+(favorites.length?' · в подборке '+favorites.length:'')+'. Оставьте телефон — согласуем время просмотра.';
- updateSave();}
-function updateSave(){const saved=selected&&favorites.includes(selected);const b=$('#save-plot');b.textContent=saved?'♥ В подборке':'♡ В подборку';b.setAttribute('aria-pressed',String(!!saved));b.setAttribute('aria-label',saved?'Убрать участок '+selected+' из подборки':'Добавить участок '+selected+' в подборку');
- $('#bar-save').textContent=saved?'♥':'♡';$('#bar-save').setAttribute('aria-pressed',String(!!saved));$('#bar-save').setAttribute('aria-label',saved?'Убрать из подборки':'Добавить в подборку');renderShortlist();}
+ $('#plot-status').textContent=sold?'Продан':'В продаже';$('#plot-status').classList.toggle('sold',sold);
+ $('#plot-price').textContent=sold?'Продан':price?money(price):'По запросу';$('#plot-price').classList.toggle('unconfirmed',warn);
+ $('#price-per-area').textContent=price&&!sold&&!warn?money(Math.round(price/p.area)):'—';$('#pop-sub').textContent=fmt(p.area)+' сот. · '+fmt(Math.round(p.area*100))+' м²'+(price&&!sold&&!warn?' · '+money(Math.round(price/p.area))+'/сот.':'');
+ $('#price-warning').hidden=!warn;$('#price-warning').textContent='В источнике 210 000 ₽ — в 10 раз ниже соседних, вероятно, опечатка. Уточним цену.';
+ $('#request-plot').firstChild.textContent=sold?'Подобрать похожий ':'Хочу этот участок ';
+ const k=visiblePlots.findIndex(x=>x.id===p.id);$('#pop-pos').textContent=k>=0?(k+1)+' из '+visiblePlots.length:'';$('#pop-prev').disabled=k<=0;$('#pop-next').disabled=k<0||k>=visiblePlots.length-1;
+ $('#closing-summary').textContent='Выбран участок № '+p.id+' · '+fmt(p.area)+' сот.'+(price&&!sold?' · '+money(price)+(warn?' (не подтверждена)':''):'')+(favorites.length?' · в избранном '+favorites.length:'')+'. Оставьте телефон — согласуем время просмотра.';
+ updateSave();positionPop();}
+// popover anchored to the plot (desktop) / bottom sheet (mobile)
+const pop=$('#plot-pop');let popOpen=false;
+function openPop(){if(!selected||view!=='map')return;popOpen=true;pop.hidden=false;$('#map-tip').hidden=true;if(mobile()){const c=centroids.get(selected),[,h]=viewSize();cam.s=Math.max(cam.s,fitScale*2.2);cam.cx=c[0];cam.cy=c[1]+h*.22/cam.s;applyCam();}positionPop();}
+function closePop(){popOpen=false;pop.hidden=true;}
+function positionPop(){if(!popOpen||!selected)return;if(mobile()){pop.style.left='';pop.style.top='';pop.classList.add('sheet');return;}pop.classList.remove('sheet');
+ const c=centroids.get(selected),[w,h]=viewSize(),x=(c[0]-cam.cx)*cam.s+w/2,y=(c[1]-cam.cy)*cam.s+h/2,pw=pop.offsetWidth||300,ph=pop.offsetHeight||360,gap=28;
+ let left=x+gap;if(left+pw>w-12)left=x-gap-pw;left=Math.max(12,Math.min(left,w-pw-12));const r=vp.getBoundingClientRect(),vt=Math.max(12,84-r.top),vb=Math.min(h,innerHeight-r.top)-12;const top=Math.max(vt,Math.min(y-ph/2,vb-ph));pop.style.left=left+'px';pop.style.top=top+'px';}
+$('#pop-close').addEventListener('click',closePop);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&popOpen)closePop();});
+function stepPop(d){const k=visiblePlots.findIndex(x=>x.id===selected),n=visiblePlots[k+d];if(!n)return;selectPlot(n.id,{via:'pop-nav'});if(!inView(n.id,140))centerOn(n.id);positionPop();}
+$('#pop-prev').addEventListener('click',()=>stepPop(-1));$('#pop-next').addEventListener('click',()=>stepPop(1));
+// hover tooltip
+const tip=$('#map-tip');
+svg.addEventListener('pointermove',e=>{if(e.pointerType!=='mouse'||drag&&dragged){tip.hidden=true;return;}const g=e.target.closest('.plot');if(!g||g.classList.contains('filtered')){tip.hidden=true;return;}
+ const p=plotById.get(+g.dataset.id),price=priceOf(p.id),sold=isSold(p.id);tip.innerHTML='<strong>№ '+p.id+'</strong> · '+fmt(p.area)+' сот.<br>'+(sold?'<span class="muted">продан</span>':price?money(price)+(p.id===ANOMALY?' ⚠':''):'по запросу')+(favorites.includes(p.id)?' · ♥':'');
+ const r=$('#map-panel').getBoundingClientRect();tip.style.left=(e.clientX-r.left+14)+'px';tip.style.top=(e.clientY-r.top+14)+'px';tip.hidden=false;});
+svg.addEventListener('pointerleave',()=>{tip.hidden=true;});
+// price colouring: 5 quantile tiers over trusted prices
+const sortedP=[...trustedPrices].sort((a,b)=>a-b),q=k=>sortedP[Math.min(sortedP.length-1,Math.floor(sortedP.length*k/5))];const cuts=[q(1),q(2),q(3),q(4)];
+$$('.plot').forEach(g=>{const id=+g.dataset.id,pr=priceOf(id);if(!isSold(id)&&pr&&id!==ANOMALY)g.classList.add('tier-'+cuts.filter(c=>pr>=c).length);});
+$('#legend-low').textContent=millions(PRICE_LOW);$('#legend-high').textContent=millions(PRICE_HIGH);
+function setColor(mode){$('.explorer').dataset.color=mode;$('#color-status').setAttribute('aria-pressed',String(mode==='status'));$('#color-price').setAttribute('aria-pressed',String(mode==='price'));track('color_mode',{mode});}
+$('#color-status').addEventListener('click',()=>setColor('status'));$('#color-price').addEventListener('click',()=>setColor('price'));
+function updateSave(){const saved=selected&&favorites.includes(selected);const b=$('#save-plot');b.textContent=saved?'♥':'♡';b.setAttribute('aria-pressed',String(!!saved));b.setAttribute('aria-label',saved?'Убрать участок '+selected+' из избранного':'Добавить участок '+selected+' в избранное');
+ $$('.plot').forEach(g=>g.classList.toggle('fav',favorites.includes(+g.dataset.id)));renderShortlist();}
 function toggleFavorite(id){const had=favorites.includes(id);favorites=had?favorites.filter(x=>x!==id):[...favorites,id];const ok=store.set('vuolie-real-favorites',favorites);track('favorite_toggle',{id,saved:!had,count:favorites.length});
- if(filters.status==='saved')applyFilters();else{const li=$('.plot-item[data-id="'+id+'"]');if(li)li.outerHTML=plotCardHTML(plotById.get(id));}updateSave();if(!ok)$('#shortlist-empty').textContent='Браузер не разрешает сохранение — подборка сохранится до закрытия страницы.';}
-$('#save-plot').addEventListener('click',()=>selected&&toggleFavorite(selected));$('#bar-save').addEventListener('click',()=>selected&&toggleFavorite(selected));
-function renderShortlist(){const items=favorites.map(id=>plotById.get(id)).filter(Boolean);$('#shortlist-count').textContent=items.length;$('#shortlist-empty').hidden=items.length>0;$('#request-shortlist').hidden=!items.length;$('#request-shortlist').firstChild.textContent='Запросить по подборке ('+items.length+') ';
- $('#shortlist-items').innerHTML=items.map(p=>{const price=priceOf(p.id);return '<li><button type="button" class="sl-pick" data-id="'+p.id+'"><strong>№ '+p.id+'</strong><span>'+fmt(p.area)+' сот. · '+(isSold(p.id)?'продан*':price?money(price)+(p.id===ANOMALY?' ⚠':''):'—')+'</span></button><button type="button" class="sl-remove" data-id="'+p.id+'" aria-label="Убрать участок '+p.id+' из подборки">×</button></li>';}).join('');}
-$('#shortlist-items').addEventListener('click',e=>{const pick=e.target.closest('.sl-pick'),rm=e.target.closest('.sl-remove');if(pick)selectPlot(+pick.dataset.id,{via:'shortlist'});if(rm){toggleFavorite(+rm.dataset.id);$('#shortlist-title').focus?.();}});
+ if(filters.status==='saved')applyFilters();else{const tr=$('.plot-item[data-id="'+id+'"]');if(tr)tr.outerHTML=plotCardHTML(plotById.get(id));}updateSave();
+ const t=$('#shortlist-toggle');t.classList.remove('bump');void t.offsetWidth;t.classList.add('bump');if(!ok)$('#shortlist-empty').textContent='Браузер не разрешает сохранение — избранное сохранится до закрытия страницы.';}
+$('#save-plot').addEventListener('click',()=>selected&&toggleFavorite(selected));
+function renderShortlist(){const items=favorites.map(id=>plotById.get(id)).filter(Boolean);$('#shortlist-count').textContent=items.length;$('#shortlist-toggle').classList.toggle('has',items.length>0);$('#shortlist-empty').hidden=items.length>0;$('#request-shortlist').hidden=!items.length;$('#request-shortlist').textContent='Запросить по избранному ('+items.length+')';
+ $('#shortlist-items').innerHTML=items.map(p=>{const price=priceOf(p.id);return '<li><button type="button" class="sl-pick" data-id="'+p.id+'"><strong>№ '+p.id+'</strong><span>'+fmt(p.area)+' сот. · '+(isSold(p.id)?'продан':price?money(price)+(p.id===ANOMALY?' ⚠':''):'—')+'</span></button><button type="button" class="sl-remove" data-id="'+p.id+'" aria-label="Убрать участок '+p.id+' из избранного">×</button></li>';}).join('');}
+$('#shortlist-items').addEventListener('click',e=>{const pick=e.target.closest('.sl-pick'),rm=e.target.closest('.sl-remove');if(pick){selectPlot(+pick.dataset.id,{via:'shortlist'});toggleShortlist(false);locatePlot();openPop();}if(rm){toggleFavorite(+rm.dataset.id);$('#shortlist-title').focus();}});
+function toggleShortlist(force){const open=force??$('#shortlist').hidden;$('#shortlist').hidden=!open;$('#shortlist-toggle').setAttribute('aria-expanded',String(open));}
+$('#shortlist-toggle').addEventListener('click',()=>toggleShortlist());
+document.addEventListener('click',e=>{if(!e.target.closest('.shortlist-wrap')&&!$('#shortlist').hidden)toggleShortlist(false);});
 
-// ---- Filters wiring ----
-$('#filter-area').addEventListener('change',e=>{filters.area=e.target.value;applyFilters('area');});
-$('#filter-status').addEventListener('change',e=>{filters.status=e.target.value;applyFilters('status');});
-$('#sort').addEventListener('change',()=>{visiblePlots=sortPlots(visiblePlots);listLimit=PAGE;renderList();track('sort_change',{sort:$('#sort').value});});
-function resetFilters(){filters={...DEFAULTS};$('#filter-area').value=filters.area;$('#filter-status').value=filters.status;renderPrice();applyFilters('reset');}
-$('#reset-filters').addEventListener('click',resetFilters);$('#empty-reset').addEventListener('click',()=>{resetFilters();$('#filter-area').focus();});
-$('#show-78').addEventListener('click',()=>{selectPlot(ANOMALY,{via:'anomaly-note'});if(view==='map')locatePlot();else $('.plot-card').scrollIntoView({block:'nearest',behavior:reducedMotion()?'auto':'smooth'});});
-$('#locate-plot').addEventListener('click',locatePlot);
+// ---- Filters wiring (chips) ----
+function syncChips(){$$('#area-chips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.area===filters.area)));$$('#status-chips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.status===filters.status)));}
+$('#area-chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;filters.area=b.dataset.area;syncChips();applyFilters('area');});
+$('#status-chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;filters.status=b.dataset.status;syncChips();applyFilters('status');});
+$('#sort').addEventListener('change',()=>{visiblePlots=sortPlots(visiblePlots);listLimit=PAGE;renderList();updateSelectionUI();track('sort_change',{sort:$('#sort').value});});
+function resetFilters(){filters={...DEFAULTS};syncChips();renderPrice();applyFilters('reset');}
+$('#reset-filters').addEventListener('click',resetFilters);$('#empty-reset').addEventListener('click',()=>{resetFilters();$('#area-chips button').focus();});
+$('#show-78').addEventListener('click',()=>{selectPlot(ANOMALY,{via:'anomaly-note'});locatePlot();openPop();});
 
 // ---- Leads ----
 // LEAD_ENDPOINT: URL бэкенда (POST JSON). Пока пусто — заявки копятся в localStorage ('vuolie_leads'), открыть: #leads
@@ -208,7 +236,7 @@ reqForm.addEventListener('submit',async e=>{e.preventDefault();const lead=readLe
  lead.plots=draftPlots().map(p=>({id:p.id,area:p.area,price:priceOf(p.id)||null,sold:isSold(p.id)}));lead.questions=$$('input[name="q"]:checked',reqForm).map(i=>QUESTIONS[i.value]);
  await sendLead(lead);reqForm.hidden=true;$('#request-done').hidden=false;});
 $('#done-close').addEventListener('click',()=>dialog.close());
-$('#request-plot').addEventListener('click',()=>openRequest('selected','card'));$('#bar-request').addEventListener('click',()=>openRequest('selected','mobile-bar'));
+$('#request-plot').addEventListener('click',()=>openRequest('selected','card'));
 $('#request-shortlist').addEventListener('click',()=>openRequest('shortlist','shortlist'));
 $('#close-request').addEventListener('click',()=>dialog.close());
 $$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
@@ -220,16 +248,10 @@ const cell=v=>v==null?'':typeof v==='object'?JSON.stringify(v):String(v);
 function showLeads(){const L=loadLeads();$('#leads-table').innerHTML=L.length?'<table><tr><th>Дата</th><th>Форма</th><th>Имя</th><th>Телефон</th><th>Связь</th><th>Детали</th></tr>'+L.slice().reverse().map(l=>'<tr><td>'+new Date(l.created).toLocaleString('ru-RU')+'</td><td>'+l.source+'</td><td>'+(l.name||'')+'</td><td>'+l.phone+'</td><td>'+(l.via||'')+'</td><td>'+cell(l.plots?l.plots.map(p=>'№'+p.id).join(', '):l.quiz?Object.values(l.quiz).filter(Boolean).join(' · '):l.plot?'№'+l.plot:'')+'</td></tr>').join('')+'</table>':'<p>Пока пусто.</p>';$('#leads-dialog').showModal();}
 $('#leads-csv').addEventListener('click',()=>{const rows=[CSV_COLS.join(';'),...loadLeads().map(l=>CSV_COLS.map(c=>'"'+cell(l[c]).replace(/"/g,'""')+'"').join(';'))];const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download='vuolie-leads.csv';a.click();});
 $('#leads-clear').addEventListener('click',()=>{if(confirm('Удалить все локальные заявки?')){localStorage.removeItem(LEADS_KEY);showLeads();}});
-if(location.hash==='#leads')showLeads();window.addEventListener('hashchange',()=>{if(location.hash==='#leads')showLeads();});
-
-// ---- Mobile sticky bar: only while the selector is on screen; content gets matching padding ----
-const bar=$('#mobile-bar');let planVisible=false;
-function updateBar(){const show=mobile()&&planVisible&&!!selected&&!dialog.open;bar.hidden=!show;document.body.classList.toggle('has-bar',show);}
-if('IntersectionObserver' in window)new IntersectionObserver(([e])=>{planVisible=e.isIntersecting;updateBar();},{rootMargin:'0px 0px -35% 0px'}).observe($('#genplan'));
-matchMedia('(max-width:760px)').addEventListener?.('change',updateBar);dialog.addEventListener('close',updateBar);
+if(location.hash==='#leads')showLeads();window.addEventListener('scroll',()=>{if(popOpen)positionPop();},{passive:true});window.addEventListener('hashchange',()=>{if(location.hash==='#leads')showLeads();});
 
 // ---- Init ----
-$('#filter-status').value=filters.status;renderPrice();setView(view);applyFilters(selected?'init-keep':'init');if(!selected&&visiblePlots[0])selectPlot(visiblePlots[0].id,{quiet:true});updateSelectionUI();updateBar();
+syncChips();renderPrice();setView(view);applyFilters(selected?'init-keep':'init');if(!selected&&visiblePlots[0])selectPlot(visiblePlots[0].id,{quiet:true});updateSelectionUI();
 requestAnimationFrame(()=>{if(view==='map')initialCamera();});
 
 // ---- Gallery lightbox ----

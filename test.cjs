@@ -18,7 +18,7 @@ check('hero facts derived from data',()=>{const trusted=Object.entries(prices).f
  assert(html.includes('187 из 233 в продаже*'));assert(html.includes('<strong>от 1,3 млн ₽</strong>'));assert(html.includes('<strong>6–15 соток</strong>'));assert(!/от 210 000|от 0,21/.test(html));assert(js.includes('+id!==ANOMALY'));});
 
 // Markup integrity.
-check('area options well-formed',()=>{const sel=html.match(/<select id="filter-area">(.*?)<\/select>/)[1];assert(!/<\/option\s+value/.test(html));const values=[...sel.matchAll(/<option value="([^"]+)">[^<]+<\/option>/g)].map(m=>m[1]);assert.deepEqual(values,['all','6-7','7-10','10-99']);});
+check('area chips well-formed',()=>{const values=[...html.matchAll(/data-area="([^"]+)"/g)].map(m=>m[1]);assert.deepEqual(values,['all','6-7','7-10','10-99']);});
 check('no duplicate ids',()=>{const ids=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);});
 const ids=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);
 for(const m of html.matchAll(/(?:src|href)="([^"#][^"]*)"/g)){if(/^(https?|data):/.test(m[1]))continue;check('local asset '+m[1],()=>assert(fs.existsSync(path.join(__dirname,m[1])),m[1]+' missing'));}
