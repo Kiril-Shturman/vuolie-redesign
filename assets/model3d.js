@@ -65,7 +65,7 @@ for(const p of V.plots){const c=p.points.split(' ').map(Number);const s=new THRE
  let ax=0,az=0;const pts=[];for(let i=0;i<c.length;i+=2){const [x,z]=W(c[i],c[i+1]);pts.push([x,z]);ax+=x;az+=z;}ax/=pts.length;az/=pts.length;
  let best=0,ang=0;for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length],l=Math.hypot(b[0]-a[0],b[1]-a[1]);if(l>best){best=l;ang=Math.atan2(b[1]-a[1],b[0]-a[0]);}}
  info.set(p.id,{x:ax,z:az,ang,mesh:m,sold});}
-function paint(){for(const m of meshes){const id=m.userData.id,i=info.get(id);m.material=id===selId?MAT.sel:id===hovId?MAT.hover:V.isFav(id)?MAT.fav:i.sold?MAT.sold:MAT.free;}needs=true;}
+function paint(){if(typeof paintMini==='function')paintMini();for(const m of meshes){const id=m.userData.id,i=info.get(id);m.material=id===selId?MAT.sel:id===hovId?MAT.hover:V.isFav(id)?MAT.fav:i.sold?MAT.sold:MAT.free;}needs=true;}
 
 // ---------- houses (illustrative) ----------
 const wallMat=new THREE.MeshStandardMaterial({color:0xd8cdb8,roughness:.9});const roofMat=new THREE.MeshStandardMaterial({color:0x3a3f45,roughness:.7});
@@ -171,19 +171,40 @@ function showCard(id){const p=V.plots.find(x=>x.id===id),sold=V.isSold(id),pr=V.
  const i=info.get(id);cardAnchor=new THREE.Vector3(i.x,8,i.z);needs=true;}
 let cardAnchor=null;
 
+
+// ---------- 2D minimap ----------
+const mini=root.querySelector('#m3-mini');const NS='http://www.w3.org/2000/svg';
+let mx0=1e9,mz0=1e9,mx1=-1e9,mz1=-1e9;const miniPolys=new Map();
+for(const p of V.plots){const c=p.points.split(' ').map(Number);const pts=[];for(let i=0;i<c.length;i+=2){const [x,z]=W(c[i],c[i+1]);pts.push(x.toFixed(1)+','+z.toFixed(1));mx0=Math.min(mx0,x);mx1=Math.max(mx1,x);mz0=Math.min(mz0,z);mz1=Math.max(mz1,z);}miniPolys.set(p.id,pts.join(' '));}
+mz0-=70;
+const PAD=40;mini.setAttribute('viewBox',[mx0-PAD,mz0-PAD,mx1-mx0+PAD*2,mz1-mz0+PAD*2].join(' '));mini.setAttribute('preserveAspectRatio','xMidYMid meet');
+{const [lx,lz]=W(1990,-760);const e=document.createElementNS(NS,'ellipse');e.setAttribute('cx',lx);e.setAttribute('cy',lz);e.setAttribute('rx',620*M*1.05);e.setAttribute('ry',520*M);e.setAttribute('class','mm-lake');mini.append(e);}
+const mmG=document.createElementNS(NS,'g');mini.append(mmG);
+for(const [id,pts] of miniPolys){const pg=document.createElementNS(NS,'polygon');pg.setAttribute('points',pts);pg.dataset.id=id;mmG.append(pg);}
+const view=document.createElementNS(NS,'path');view.setAttribute('class','mm-view');mini.append(view);
+const camDot=document.createElementNS(NS,'circle');camDot.setAttribute('r',14);camDot.setAttribute('class','mm-cam');mini.append(camDot);
+function paintMini(){for(const pg of mmG.children){const id=+pg.dataset.id;pg.setAttribute('class',id===selId?'sel':V.isFav(id)?'fav':V.isSold(id)?'sold':'free');}}
+function updMini(){const t=controls.target,c=camera.position;let dx=t.x-c.x,dz=t.z-c.z;const L=Math.hypot(dx,dz)||1;dx/=L;dz/=L;
+ const R=Math.min(140,camera.position.distanceTo(t)*.22),a=.42;const p1=[t.x-dx*R*.2,t.z-dz*R*.2];
+ const lx=Math.cos(a)*dx-Math.sin(a)*dz,lz=Math.sin(a)*dx+Math.cos(a)*dz,rx=Math.cos(-a)*dx-Math.sin(-a)*dz,rz=Math.sin(-a)*dx+Math.cos(-a)*dz;
+ const cx2=Math.max(mx0-PAD,Math.min(mx1+PAD,c.x)),cz2=Math.max(mz0-PAD,Math.min(mz1+PAD,c.z));
+ view.setAttribute('d',`M${cx2} ${cz2} L${cx2+lx*R*2} ${cz2+lz*R*2} L${cx2+rx*R*2} ${cz2+rz*R*2} Z`);camDot.setAttribute('cx',cx2);camDot.setAttribute('cy',cz2);}
+mini.addEventListener('click',e=>{const pg=e.target.closest('polygon');const pt=mini.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;const w=pt.matrixTransform(mini.getScreenCTM().inverse());
+ tour(false);if(pg){const id=+pg.dataset.id;selId=id;paint();V.select(id);showCard(id);const i=info.get(id);const off=camera.position.clone().sub(controls.target).setLength(260);off.y=Math.max(off.y,150);fly([i.x+off.x,off.y,i.z+off.z],[i.x,0,i.z],1200);}
+ else{const off=camera.position.clone().sub(controls.target);fly([w.x+off.x,camera.position.y,w.y+off.z],[w.x,0,w.y],1000);}});
 // ---------- loop ----------
 function resize(){const w=canvasWrap.clientWidth,h=canvasWrap.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(mobile()&&!resize.done){controls.target.set(140,0,-60);camera.position.set(-120,820,820);resize.done=true;}needs=true;}
 new ResizeObserver(resize).observe(canvasWrap);resize();
 const tmp=new THREE.Vector3();
 function frame(t){requestAnimationFrame(frame);if(!visible)return;if(anim){anim(t);needs=true;}const moved=controls.update();if(!moved&&!needs)return;needs=false;
- renderer.render(scene,camera);
+ renderer.render(scene,camera);updMini();
  const w=canvasWrap.clientWidth,h=canvasWrap.clientHeight;const headH=root.querySelector('.m3-head').offsetHeight+root.querySelector('.m3-head').offsetTop;
  for(const l of labels){tmp.copy(l.v).project(camera);const sy=(-tmp.y*.5+.5)*h;const on=tmp.z<1&&Math.abs(tmp.x)<1.1&&Math.abs(tmp.y)<1.1&&!(mobile()&&sy<headH+12);l.el.style.display=on?'':'none';if(on)l.el.style.transform=`translate(${(tmp.x*.5+.5)*w}px,${(-tmp.y*.5+.5)*h}px)`;}
  if(cardAnchor&&!card.hidden&&!mobile()){tmp.copy(cardAnchor).project(camera);card.style.left=Math.min(w-260,Math.max(10,(tmp.x*.5+.5)*w+24))+'px';card.style.top=Math.min(h-230,Math.max(70,(-tmp.y*.5+.5)*h-90))+'px';}}
 controls.addEventListener('change',()=>{needs=true;});
 new IntersectionObserver(e=>{visible=e[0].isIntersecting;needs=true;},{rootMargin:'200px'}).observe(root);
 requestAnimationFrame(frame);
-root.classList.add('ready');
+paintMini();updMini();root.classList.add('ready');
 const tbtn=root.querySelector('#m3-touch');tbtn.addEventListener('click',()=>{const on=!root.classList.contains('touch-on');root.classList.toggle('touch-on',on);tbtn.textContent=on?'✓ Готово — листать страницу':'☝︎ Покрутить модель';});
 window.vuolie3d={renderer,scene,camera,controls,showStop,fly};
 }
