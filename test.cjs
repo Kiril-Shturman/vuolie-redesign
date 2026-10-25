@@ -15,7 +15,7 @@ check('embedded geometry equals plots.json exactly',()=>{const embedded=JSON.par
 check('187 published prices, 46 sold, disjoint and complete',()=>{assert.equal(Object.keys(prices).length,187);assert.equal(sold.length,46);assert.equal(prices[78],210000);for(const p of data.plots)assert.equal(sold.includes(p.id),!Object.hasOwn(prices,p.id));});
 check('snapshot date 17.10.2026 shown',()=>{assert(html.includes('17.10.2026'));assert(js.includes("SNAPSHOT='17.10.2026'"));});
 check('hero facts derived from data',()=>{const trusted=Object.entries(prices).filter(([id])=>id!=='78').map(([,v])=>v);assert.equal(Math.min(...trusted),1300000);assert.equal(Math.max(...trusted),6000000);const areas=data.plots.map(p=>p.area);assert.equal(Math.min(...areas),6);assert.equal(Math.max(...areas),15);
- assert(html.includes('<strong>187</strong><span>в продаже*</span>'));assert(html.includes('<strong>от 1,3 млн ₽</strong>'));assert(html.includes('<strong>6–15</strong>'));assert(!/от 210 000|от 0,21/.test(html));assert(js.includes('+id!==ANOMALY'));});
+ assert(html.includes('187 из 233 в продаже*'));assert(html.includes('<strong>от 1,3 млн ₽</strong>'));assert(html.includes('<strong>6–15 соток</strong>'));assert(!/от 210 000|от 0,21/.test(html));assert(js.includes('+id!==ANOMALY'));});
 
 // Markup integrity.
 check('area options well-formed',()=>{const sel=html.match(/<select id="filter-area">(.*?)<\/select>/)[1];assert(!/<\/option\s+value/.test(html));const values=[...sel.matchAll(/<option value="([^"]+)">[^<]+<\/option>/g)].map(m=>m[1]);assert.deepEqual(values,['all','6-7','7-10','10-99']);});
@@ -24,12 +24,12 @@ const ids=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);
 for(const m of html.matchAll(/(?:src|href)="([^"#][^"]*)"/g)){if(/^(https?|data):/.test(m[1]))continue;check('local asset '+m[1],()=>assert(fs.existsSync(path.join(__dirname,m[1])),m[1]+' missing'));}
 for(const m of html.matchAll(/href="#([^"]+)"/g))check('anchor '+m[1],()=>assert(ids.includes(m[1]),'missing anchor '+m[1]));
 check('every $(#id) used in app.js exists',()=>{for(const m of js.matchAll(/\$\('#([\w-]+)/g))assert(ids.includes(m[1]),'#'+m[1]+' missing in HTML');});
-check('selector comes right after hero',()=>{const order=['class="hero"','id="genplan"','id="checklist"','id="place"','id="faq"','class="closing"'].map(s=>html.indexOf(s));assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])));});
+check('section order',()=>{const order=['class="hero"','id="about"','id="genplan"','id="infra"','id="installment"','id="quiz"','id="location"','id="place"','id="faq"','class="closing"'].map(s=>html.indexOf(s));assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])));});
 check('double-ended price range + numeric inputs',()=>{for(const id of ['price-min','price-max','price-min-input','price-max-input'])assert(ids.includes(id));assert(js.includes('PRICE_LOW=Math.min(...trustedPrices)'));});
 
 // Leads: forms present, endpoint configurable, disclosures kept.
-check('disclosures kept',()=>{assert(html.includes('не официальный сайт'));assert(html.includes('Не является публичной офертой'));assert(html.includes('Подлинный генплан'));});
-check('lead forms with phone + consent',()=>{for(const src of ['hero','quiz','plot','closing'])assert(html.includes('data-source="'+src+'"'),src);assert((html.match(/type="tel"/g)||[]).length>=4);assert((html.match(/name="consent"/g)||[]).length>=4);assert(html.includes('id="privacy"'));});
+check('disclosures kept',()=>{assert(/не официальный сайт/i.test(html));assert(html.includes('Не является публичной офертой'));assert(html.includes('Подлинный генплан'));});
+check('lead forms with phone + consent',()=>{for(const src of ['hero','quiz','plot','closing','installment','excursion'])assert(html.includes('data-source="'+src+'"'),src);assert((html.match(/type="tel"/g)||[]).length>=4);assert((html.match(/name="consent"/g)||[]).length>=4);assert(html.includes('id="privacy"'));});
 check('lead storage: localStorage + optional endpoint only',()=>{assert(js.includes("LEAD_ENDPOINT=''"));assert(js.includes("LEADS_KEY='vuolie_leads'"));assert(!/XMLHttpRequest|sendBeacon|WebSocket|EventSource|import\(/.test(js));assert(!/<script[^>]+src="https?:/.test(html));assert(!/@import|url\(https?:/.test(css));});
 check('no fake scarcity/reviews',()=>{assert(!/осталось всего|только сегодня|отзыв|★/i.test(html+js));});
 check('css essentials',()=>{assert(css.includes('prefers-reduced-motion'));assert(css.includes('@media(max-width:760px)'));assert(css.includes('#focus-ring')||css.includes('.ring.outer'));});
