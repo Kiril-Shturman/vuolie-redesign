@@ -671,3 +671,28 @@ video.hero-bg{width:100%;object-fit:cover;transform:none}
 .m3-mini svg{height:180px}.m3-mini{overflow:hidden}
 @media(max-width:760px){.m3-mini svg{height:92px}}
 .m3-mini svg{height:160px}
+/* minimap v2 */
+.m3-mini{width:400px;padding:12px;top:92px}
+.mm-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}.mm-head b{font-size:14px;color:#fff}
+.mm-fold{width:28px;height:28px;border-radius:8px;border:1px solid #ffffff26;background:#ffffff0f;color:#fff;font-size:16px;line-height:1}
+.m3-mini.folded .mm-body{display:none}
+.mm-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.mm-chips{display:flex;background:#ffffff14;border-radius:10px;padding:3px;gap:2px}.mm-chips button{border:0;background:none;color:#dfe7d6;font-size:12px;font-weight:600;padding:5px 9px;border-radius:7px;white-space:nowrap}.mm-chips button[aria-pressed=true]{background:#f4f1e6;color:#13241a}
+.mm-stage{position:relative;border-radius:12px;overflow:hidden;background:#24361f}
+.m3-mini svg{height:270px!important;touch-action:none;cursor:grab}.m3-mini svg:active{cursor:grabbing}
+.mm-bg{fill:#2a3f26}
+.m3-mini polygon.off{fill:#3a4a36;opacity:.45}.m3-mini polygon.t0{fill:#e9f2c8}.m3-mini polygon.t1{fill:#c6e09a}.m3-mini polygon.t2{fill:#f2d77c}.m3-mini polygon.t3{fill:#eca95a}.m3-mini polygon.t4{fill:#d9704a}
+.mm-labels text{display:none;font-size:6px;font-weight:700;fill:#13241a;text-anchor:middle;pointer-events:none;font-family:Manrope,Arial,sans-serif}.mm-num .mm-labels text{display:block}
+.mm-zoom{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;background:#fbfaf5;border-radius:9px;overflow:hidden;box-shadow:0 4px 12px #0004}.mm-zoom button{width:30px;height:30px;border:0;background:none;font-size:16px;color:var(--ink)}
+.mm-tip{position:absolute;pointer-events:none;background:#fbfaf5;color:var(--ink);font-size:12px;padding:6px 9px;border-radius:8px;box-shadow:0 6px 16px #0005;white-space:nowrap;z-index:2}
+.mm-legend{display:flex;gap:12px;font-size:11px;color:#cfd8c6;margin-top:8px}.mm-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}.mm-legend i.free{background:#a7c47a}.mm-legend i.sold{background:#5c6a52}.mm-legend i.fav{background:#f0b8b8}
+.mm-legend.price span{display:none}.mm-legend.price:before{content:'дешевле';margin-right:6px}.mm-legend.price:after{content:'';flex:0 0 120px;height:9px;border-radius:9px;background:linear-gradient(90deg,#e9f2c8,#c6e09a,#f2d77c,#eca95a,#d9704a);margin-top:3px}
+.mm-legend.price{align-items:center}
+.m3-mini-t{display:none}
+@media(max-width:760px){
+ .m3-mini{width:auto;left:10px;right:10px;top:auto;bottom:178px;padding:8px}.m3-mini svg{height:150px!important}
+ .m3-mini:not(.folded) ~ .m3-touch{top:20%}
+ .mm-filters{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.mm-legend{display:none}
+ .m3-mini.folded{left:auto;width:auto}
+}
+@media(max-width:760px){.m3-mini.folded{left:auto;right:10px;padding:6px 8px}.m3-mini.folded .mm-head{margin:0;gap:10px}.m3-mini.folded .mm-head b:before{content:'Мини-карта · '}}
