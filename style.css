@@ -567,3 +567,12 @@ video.hero-bg{width:100%;object-fit:cover;transform:none}
 .hero.intro.show-copy .hero-copy>:nth-child(5){transition-delay:.75s}
 .hero.intro.show-form .hero-card,.hero.intro.show-form .hero-note{opacity:1;transform:none;visibility:visible;transition:opacity .8s ease,transform .8s cubic-bezier(.2,.7,.2,1),visibility 0s}
 @media(prefers-reduced-motion:reduce){.hero.intro .hero-copy>*,.hero.intro .hero-card,.hero.intro .hero-note{opacity:1;transform:none;visibility:visible}.hero.intro:before{opacity:1}}
+/* mobile: keep the video alive under the text (lighter overlay + text shadow) */
+@media(max-width:760px){
+ .hero:before{background:linear-gradient(180deg,#0d1f1726 0%,#0d1f174d 35%,#0d1f1773 70%,#0d1f17b3 100%)!important}
+ .hero.intro:before{transition:opacity 2.2s ease}
+ .hero-copy{text-shadow:0 1px 14px #0b1a1299,0 1px 3px #0b1a1280}
+ .hero-facts{border-color:#ffffff40}.hero-facts li+li,.hero-facts li:nth-child(n+3){border-color:#ffffff40}
+ .hero.intro .hero-copy>*{transition-duration:1.2s}
+}
+@media(max-width:760px){.hero:before{background:linear-gradient(180deg,#0d1f1780 0%,#0d1f1766 45%,#0d1f1759 70%,#0d1f17a6 100%)!important}}
