@@ -21,7 +21,7 @@ check('hero facts derived from data',()=>{const trusted=Object.entries(prices).f
 check('area chips well-formed',()=>{const values=[...html.matchAll(/data-area="([^"]+)"/g)].map(m=>m[1]);assert.deepEqual(values,['all','6-7','7-10','10-99']);});
 check('no duplicate ids',()=>{const ids=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);assert.equal(ids.length,new Set(ids).size);});
 const ids=[...html.matchAll(/id="([^"]+)"/g)].map(m=>m[1]);
-for(const m of html.matchAll(/(?:src|href)="([^"#][^"]*)"/g)){if(/^(https?|data):/.test(m[1]))continue;check('local asset '+m[1],()=>assert(fs.existsSync(path.join(__dirname,m[1])),m[1]+' missing'));}
+for(const m of html.matchAll(/(?:src|href)="([^"#][^"]*)"/g)){if(/^(https?|data):/.test(m[1]))continue;const f=m[1].split('?')[0];check('local asset '+f,()=>assert(fs.existsSync(path.join(__dirname,f)),f+' missing'));}
 for(const m of html.matchAll(/href="#([^"]+)"/g))check('anchor '+m[1],()=>assert(ids.includes(m[1]),'missing anchor '+m[1]));
 check('every $(#id) used in app.js exists',()=>{for(const m of js.matchAll(/\$\('#([\w-]+)/g))assert(ids.includes(m[1]),'#'+m[1]+' missing in HTML');});
 check('section order',()=>{const order=['class="hero"','id="about"','id="genplan"','id="infra"','id="installment"','id="quiz"','id="location"','id="place"','id="faq"','class="closing"'].map(s=>html.indexOf(s));assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])));});

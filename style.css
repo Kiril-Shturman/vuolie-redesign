@@ -457,3 +457,6 @@ h2{font-size:clamp(36px,4.2vw,64px)}
 }
 .shortlist-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
 @media(max-width:760px){.color-switch button,.view-switch button{padding:8px 9px}.shortlist-toggle{min-width:0;padding:0 8px;gap:4px}.results-tools{gap:4px}}
+@media(max-width:760px){.map-card>.map-legend{left:8px;top:8px;bottom:auto;font-size:11px;gap:10px;padding:6px 10px}.map-card>.map-legend i{width:10px;height:10px}.price-legend .grad{width:80px}}
+@media(max-width:760px){.map-viewport{height:min(58svh,480px)}}
+@media(max-width:760px){.map-viewport{height:min(52svh,400px)}}

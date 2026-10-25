@@ -127,7 +127,7 @@ function locatePlot(){if(!selected)return;setView('map');computeFit();centerOn(s
 
 // ---- Views ----
 function setView(next,user){view=next;const list=next==='list';if(list)closePop();$('#map-panel').hidden=list;$('#list-panel').hidden=!list;$('.explorer').dataset.view=next;$('#view-map').setAttribute('aria-pressed',String(!list));$('#view-list').setAttribute('aria-pressed',String(list));if(!list){requestAnimationFrame(()=>{const s=cam.s;computeFit();if(s===1||!svg.getAttribute('viewBox'))initialCamera();else applyCam();});}if(user)track('view_change',{view:next});}
-function initialCamera(){fitAll();if(mobile()&&selected){centerOn(selected,Math.max(fitScale*2.4,.45));}}
+function initialCamera(){fitAll();if(mobile()){const [w]=viewSize();cam.s=Math.max(fitScale,w*1.2/(bounds.x1-bounds.x0));applyCam();}}
 $('#view-map').addEventListener('click',()=>setView('map',true));$('#view-list').addEventListener('click',()=>setView('list',true));
 new ResizeObserver(()=>{if(view!=='map')return;const old=fitScale;computeFit();cam.s=cam.s*(fitScale/(old||fitScale));applyCam();}).observe(vp);
 
