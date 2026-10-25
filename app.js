@@ -81,7 +81,7 @@ $('#plot-list').addEventListener('click',e=>{const tr=e.target.closest('.plot-it
 $('#more-plots').addEventListener('click',()=>{const first=listLimit;listLimit+=PAGE*2;renderList();const next=$$('#plot-list .plot-main')[first];if(next)next.focus();});
 
 // ---- Masterplan: viewBox-based zoom/pan (no scrollbars) ----
-const ns='http://www.w3.org/2000/svg',svg=$('#masterplan'),vp=$('#map-viewport');const MAP_W=3686.1,MAP_H=2326.85;
+const ns='http://www.w3.org/2000/svg',svg=$('#masterplan'),vp=$('#map-viewport');const IMG={x0:-1843.05,y0:-2326.85,x1:5529.15,y1:4653.7};
 const centroids=new Map();let bounds={x0:Infinity,y0:Infinity,x1:-Infinity,y1:-Infinity};
 plots.forEach(p=>{const g=document.createElementNS(ns,'g');g.classList.add('plot');g.classList.toggle('sold',isSold(p.id));g.dataset.id=p.id;g.setAttribute('role','button');g.setAttribute('tabindex','-1');g.setAttribute('aria-label','Участок '+p.id+', '+fmt(p.area)+' соток, '+(isSold(p.id)?'продан по источнику':money(priceOf(p.id))+' за участок'+(p.id===ANOMALY?', цена не подтверждена':'')));
  const polygon=document.createElementNS(ns,'polygon');polygon.setAttribute('points',p.points);const c=p.points.split(' ').map(Number),n=c.length/2;let sx=0,sy=0;for(let i=0;i<c.length;i+=2){sx+=c[i];sy+=c[i+1];bounds.x0=Math.min(bounds.x0,c[i]);bounds.x1=Math.max(bounds.x1,c[i]);bounds.y0=Math.min(bounds.y0,c[i+1]);bounds.y1=Math.max(bounds.y1,c[i+1]);}
@@ -89,11 +89,11 @@ plots.forEach(p=>{const g=document.createElementNS(ns,'g');g.classList.add('plot
 const cam={cx:0,cy:0,s:1};let fitScale=1;
 function viewSize(){return [vp.clientWidth||1,vp.clientHeight||1];}
 function computeFit(){const [w,h]=viewSize(),pad=60;fitScale=Math.min(w/(bounds.x1-bounds.x0+pad*2),h/(bounds.y1-bounds.y0+pad*2));}
-const minScale=()=>fitScale*.85,maxScale=()=>Math.max(fitScale*8,3.2);
+const minScale=()=>{const [w,h]=viewSize();return Math.max(fitScale*.5,w/(IMG.x1-IMG.x0),h/(IMG.y1-IMG.y0));},maxScale=()=>Math.max(fitScale*8,3.2);
 function applyCam(){const [w,h]=viewSize();cam.s=Math.min(maxScale(),Math.max(minScale(),cam.s));const vw=w/cam.s,vh=h/cam.s;
  cam.cx=Math.min(Math.max(cam.cx,bounds.x0),bounds.x1);cam.cy=Math.min(Math.max(cam.cy,bounds.y0),bounds.y1);
  // keep the view inside the masterplan image whenever it is larger than the view (no empty bands)
- if(vw<MAP_W)cam.cx=Math.min(Math.max(cam.cx,vw/2),MAP_W-vw/2);if(vh<MAP_H)cam.cy=Math.min(Math.max(cam.cy,vh/2),MAP_H-vh/2);
+ if(vw<=IMG.x1-IMG.x0+1)cam.cx=Math.min(Math.max(cam.cx,IMG.x0+vw/2),IMG.x1-vw/2);if(vh<=IMG.y1-IMG.y0+1)cam.cy=Math.min(Math.max(cam.cy,IMG.y0+vh/2),IMG.y1-vh/2);
  svg.setAttribute('viewBox',[cam.cx-vw/2,cam.cy-vh/2,vw,vh].map(v=>v.toFixed(2)).join(' '));svg.classList.toggle('show-labels',cam.s*21>=8.5);
  positionPop();$('#zoom-in').disabled=cam.s>=maxScale()-1e-6;$('#zoom-out').disabled=cam.s<=minScale()+1e-6;}
 function fitAll(){computeFit();cam.s=fitScale;cam.cx=(bounds.x0+bounds.x1)/2;cam.cy=(bounds.y0+bounds.y1)/2;applyCam();}
