@@ -27,11 +27,10 @@ check('every $(#id) used in app.js exists',()=>{for(const m of js.matchAll(/\$\(
 check('selector comes right after hero',()=>{const order=['class="hero"','id="genplan"','id="checklist"','id="place"','id="faq"','class="closing"'].map(s=>html.indexOf(s));assert(order.every((v,i)=>v>0&&(i===0||v>order[i-1])));});
 check('double-ended price range + numeric inputs',()=>{for(const id of ['price-min','price-max','price-min-input','price-max-input'])assert(ids.includes(id));assert(js.includes('PRICE_LOW=Math.min(...trustedPrices)'));});
 
-// Honesty: disclosures, no lead capture, no external transmission.
-check('disclosures kept',()=>{assert(html.includes('не официальный сайт'));assert(html.includes('Не является публичной офертой'));assert(html.includes('Подлинный генплан'));assert(html.includes('Запрос не отправляется'));assert(html.includes('Получатель заявок'));});
-check('no form, no personal-data fields',()=>{assert(!html.includes('<form'));assert(!/type="(tel|email)"|autocomplete="(name|tel|email)"/.test(html));});
-check('no network transmission in app.js',()=>{assert(!/\bfetch\(|XMLHttpRequest|sendBeacon|WebSocket|EventSource|import\(/.test(js));assert(!/<script[^>]+src="https?:/.test(html));assert(!/@import|url\(https?:/.test(css));});
-check('analytics hooks labelled not connected',()=>{assert(js.includes('NOT connected'));assert(js.includes("track('request_copy'"));});
+// Leads: forms present, endpoint configurable, disclosures kept.
+check('disclosures kept',()=>{assert(html.includes('не официальный сайт'));assert(html.includes('Не является публичной офертой'));assert(html.includes('Подлинный генплан'));});
+check('lead forms with phone + consent',()=>{for(const src of ['hero','quiz','plot','closing'])assert(html.includes('data-source="'+src+'"'),src);assert((html.match(/type="tel"/g)||[]).length>=4);assert((html.match(/name="consent"/g)||[]).length>=4);assert(html.includes('id="privacy"'));});
+check('lead storage: localStorage + optional endpoint only',()=>{assert(js.includes("LEAD_ENDPOINT=''"));assert(js.includes("LEADS_KEY='vuolie_leads'"));assert(!/XMLHttpRequest|sendBeacon|WebSocket|EventSource|import\(/.test(js));assert(!/<script[^>]+src="https?:/.test(html));assert(!/@import|url\(https?:/.test(css));});
 check('no fake scarcity/reviews',()=>{assert(!/осталось всего|только сегодня|отзыв|★/i.test(html+js));});
 check('css essentials',()=>{assert(css.includes('prefers-reduced-motion'));assert(css.includes('@media(max-width:760px)'));assert(css.includes('#focus-ring')||css.includes('.ring.outer'));});
 

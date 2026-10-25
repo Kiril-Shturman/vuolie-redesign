@@ -18,7 +18,7 @@ const PRICE_LOW=Math.min(...trustedPrices),PRICE_HIGH=Math.max(...trustedPrices)
 const fmt=n=>n.toLocaleString('ru-RU'),money=n=>fmt(n)+' ₽',millions=n=>(n/1e6).toLocaleString('ru-RU',{maximumFractionDigits:2})+' млн ₽';
 const mobile=()=>matchMedia('(max-width:760px)').matches,reducedMotion=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// ---- Analytics hooks: local only. NOT connected to any service, no network, no PII. ----
+// ---- Analytics hooks: local event log (подключить Метрику позже) ----
 // Events are kept in memory (window.vuolieEvents) and dispatched as a DOM event so a real,
 // consented analytics integration can subscribe later. Nothing leaves the browser.
 window.vuolieEvents=[];
@@ -145,7 +145,7 @@ function updateSelectionUI(){const p=plotById.get(selected);$('.side').classList
  $('#request-plot').firstChild.textContent=sold?'Спросить о похожих участках ':'Запросить цену и просмотр ';
  $('#official-link').textContent='Сверить № '+p.id+' на vuolie.ru ↗';$('#official-link').setAttribute('aria-label','Сверить участок № '+p.id+' на официальном сайте vuolie.ru, откроется в новой вкладке');
  $('#bar-title').textContent='№ '+p.id+' · '+fmt(p.area)+' сот.';$('#bar-price').textContent=sold?'Продан*':price?money(price)+(warn?' ⚠':''):'';
- $('#closing-summary').textContent='Выбран участок № '+p.id+' · '+fmt(p.area)+' сот.'+(price?' · '+money(price)+(warn?' (не подтверждена)':''):'')+(favorites.length?' · в подборке '+favorites.length:'')+'. Номер, площадь и цена попадут в текст автоматически.';
+ $('#closing-summary').textContent='Выбран участок № '+p.id+' · '+fmt(p.area)+' сот.'+(price?' · '+money(price)+(warn?' (не подтверждена)':''):'')+(favorites.length?' · в подборке '+favorites.length:'')+'. Оставьте телефон — согласуем время просмотра.';
  updateSave();}
 function updateSave(){const saved=selected&&favorites.includes(selected);const b=$('#save-plot');b.textContent=saved?'♥ В подборке':'♡ В подборку';b.setAttribute('aria-pressed',String(!!saved));b.setAttribute('aria-label',saved?'Убрать участок '+selected+' из подборки':'Добавить участок '+selected+' в подборку');
  $('#bar-save').textContent=saved?'♥':'♡';$('#bar-save').setAttribute('aria-pressed',String(!!saved));$('#bar-save').setAttribute('aria-label',saved?'Убрать из подборки':'Добавить в подборку');renderShortlist();}
@@ -165,30 +165,62 @@ $('#reset-filters').addEventListener('click',resetFilters);$('#empty-reset').add
 $('#show-78').addEventListener('click',()=>{selectPlot(ANOMALY,{via:'anomaly-note'});if(view==='map')locatePlot();else $('.plot-card').scrollIntoView({block:'nearest',behavior:reducedMotion()?'auto':'smooth'});});
 $('#locate-plot').addEventListener('click',locatePlot);
 
-// ---- Local inquiry draft (no recipient configured: nothing is sent) ----
-const dialog=$('#request-dialog'),draft=$('#draft-text');let draftScope='selected';
-const QUESTIONS={price:'подтвердить актуальную цену и статус',viewing:'предложить удобное время для просмотра на месте',legal:'сообщить кадастровый номер, категорию земли и вид разрешённого использования',utilities:'рассказать, какие коммуникации (электричество, вода, газ) и дороги есть или планируются и на каких условиях',payment:'описать условия оплаты и порядок сделки'};
-function plotLine(p){const price=priceOf(p.id),sold=isSold(p.id);let s='— участок № '+p.id+': '+fmt(p.area)+' сот.';if(sold)s+=', на сайте отмечен проданным (есть ли похожие варианты?)';else if(p.id===ANOMALY)s+=', в источнике указано 210 000 ₽ за участок — прошу подтвердить цену, возможна опечатка';else if(price)s+=', '+money(price)+' за участок';return s+';';}
+// ---- Leads ----
+// LEAD_ENDPOINT: URL бэкенда (POST JSON). Пока пусто — заявки копятся в localStorage ('vuolie_leads'), открыть: #leads
+const LEAD_ENDPOINT='';
+const LEADS_KEY='vuolie_leads';
+const loadLeads=()=>{try{return JSON.parse(localStorage.getItem(LEADS_KEY))||[];}catch{return [];}};
+function utm(){const p=new URLSearchParams(location.search),o={};['utm_source','utm_medium','utm_campaign','utm_term','utm_content','yclid'].forEach(k=>{if(p.get(k))o[k]=p.get(k);});return o;}
+async function sendLead(lead){lead.id=Date.now().toString(36)+Math.random().toString(36).slice(2,6);lead.created=new Date().toISOString();lead.page=location.pathname;lead.utm=utm();lead.referrer=document.referrer||'';
+ const all=loadLeads();all.push(lead);try{localStorage.setItem(LEADS_KEY,JSON.stringify(all.slice(-500)));}catch{}
+ if(LEAD_ENDPOINT){try{await fetch(LEAD_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(lead),keepalive:true});}catch{}}
+ track('lead',{source:lead.source});return lead;}
+const phoneDigits=v=>{let d=v.replace(/\D/g,'');if(d[0]==='8')d='7'+d.slice(1);if(d&&d[0]!=='7')d='7'+d;return d.slice(0,11);};
+function fmtPhone(v){const d=phoneDigits(v);if(!d)return '';const p=d.slice(1);let s='+7';if(p.length)s+=' ('+p.slice(0,3);if(p.length>=3)s+=')';if(p.length>3)s+=' '+p.slice(3,6);if(p.length>6)s+='-'+p.slice(6,8);if(p.length>8)s+='-'+p.slice(8,10);return s;}
+$$('input[type=tel]').forEach(i=>{i.addEventListener('focus',()=>{if(!i.value)i.value='+7 ';});i.addEventListener('input',()=>{i.value=fmtPhone(i.value);});i.addEventListener('blur',()=>{if(phoneDigits(i.value).length<2)i.value='';});});
+function readLead(form){const f=new FormData(form),phone=phoneDigits(f.get('phone')||'');const msg=form.querySelector('.form-msg'),tel=form.querySelector('input[type=tel]');
+ tel.classList.remove('invalid');msg.textContent='';
+ if(phone.length!==11){tel.classList.add('invalid');tel.focus();msg.textContent='Введите номер телефона полностью';return null;}
+ if(!form.querySelector('[name=consent]').checked){msg.textContent='Нужно согласие на обработку данных';return null;}
+ return {source:form.dataset.source,phone:'+'+phone,name:(f.get('name')||'').trim(),via:f.get('via')||''};}
+function doneInline(form,text){form.innerHTML='<div class="lead-done"><strong>Спасибо!</strong><p>'+text+'</p></div>';}
+$$('form.lead-inline').forEach(form=>form.addEventListener('submit',async e=>{e.preventDefault();const lead=readLead(form);if(!lead)return;if(selected)lead.plot=selected;if(favorites.length)lead.shortlist=[...favorites];await sendLead(lead);
+ doneInline(form,form.dataset.source==='closing'?'Перезвоним, чтобы согласовать время просмотра.':'Скоро пришлём подборку свободных участков с ценами.');}));
+// quiz
+const quiz=$('#quiz-form'),steps=$$('.quiz-step',quiz);let qStep=1;
+function showStep(n){qStep=n;steps.forEach(s=>s.hidden=+s.dataset.step!==n);$('#quiz-back').hidden=n===1;$('#quiz-bar').style.width=(Math.min(n,5)-1)/4*100+'%';$('#quiz-step-label').textContent=n<5?'Вопрос '+n+' из 4':'Последний шаг';}
+quiz.addEventListener('change',e=>{if(e.target.type==='radio'&&e.target.name!=='via'&&qStep<5){track('quiz_step',{step:qStep,[e.target.name]:e.target.value});setTimeout(()=>showStep(qStep+1),180);}});
+$('#quiz-back').addEventListener('click',()=>showStep(Math.max(1,qStep-1)));
+quiz.addEventListener('submit',async e=>{e.preventDefault();const lead=readLead(quiz);if(!lead)return;const f=new FormData(quiz);lead.quiz={area:f.get('area'),budget:f.get('budget'),payment:f.get('payment'),when:f.get('when')};await sendLead(lead);
+ $('#quiz-bar').style.width='100%';$('#quiz-step-label').textContent='Готово';doneInline(quiz,'Подберём участки под ваши ответы и свяжемся с вами.');});
+showStep(1);
+// plot request dialog
+const dialog=$('#request-dialog'),reqForm=$('#request-form');let draftScope='selected';
+const QUESTIONS={price:'цена и статус',viewing:'просмотр',legal:'документы',utilities:'коммуникации',payment:'оплата'};
 function draftPlots(){return draftScope==='shortlist'&&favorites.length?favorites.map(id=>plotById.get(id)).filter(Boolean):[plotById.get(selected)].filter(Boolean);}
-function buildDraft(){const list=draftPlots(),qs=$$('input[name="q"]:checked').map(i=>QUESTIONS[i.value]);const many=list.length>1;
- return ['Здравствуйте!','',(many?'Меня интересуют участки':'Меня интересует участок')+' в посёлке «Вуолье» по генплану на сайте vuolie.ru:',...list.map(plotLine),'',qs.length?'Прошу:\n'+qs.map(q=>'— '+q+';').join('\n'):'Прошу связаться со мной по '+(many?'этим участкам':'этому участку')+'.','','Цены и статусы указаны по публичному генплану '+SOURCE_URL+' на '+SNAPSHOT+' и могут быть неактуальны.','','Спасибо!'].join('\n');}
-function refreshDraft(){draft.value=buildDraft();$('#draft-status').textContent='';}
 function openRequest(scope,via){if(!selected&&!favorites.length)return;draftScope=scope==='shortlist'&&favorites.length?'shortlist':'selected';if(!selected)draftScope='shortlist';
  $('#scope-selected-label').textContent=selected?'Выбранный участок № '+selected:'Участок не выбран';$('#draft-scope').querySelector('[value="selected"]').disabled=!selected;
  $('#scope-shortlist-label').textContent=favorites.length?'Вся подборка ('+favorites.length+'): '+favorites.map(id=>'№'+id).join(', '):'Подборка пуста';$('#draft-scope').querySelector('[value="shortlist"]').disabled=!favorites.length;
- $$('input[name="scope"]').forEach(r=>r.checked=r.value===draftScope);refreshDraft();$('#share-draft').hidden=!navigator.share;dialog.showModal();draft.scrollTop=0;
+ $$('input[name="scope"]').forEach(r=>r.checked=r.value===draftScope);reqForm.hidden=false;$('#request-done').hidden=true;reqForm.querySelector('.form-msg').textContent='';dialog.showModal();
  track('request_open',{scope:draftScope,ids:draftPlots().map(p=>p.id),via:via||'other'});}
-$$('input[name="scope"]').forEach(r=>r.addEventListener('change',()=>{draftScope=r.value;refreshDraft();}));$$('input[name="q"]').forEach(c=>c.addEventListener('change',refreshDraft));
+$$('input[name="scope"]').forEach(r=>r.addEventListener('change',()=>{draftScope=r.value;}));
+reqForm.addEventListener('submit',async e=>{e.preventDefault();const lead=readLead(reqForm);if(!lead)return;
+ lead.plots=draftPlots().map(p=>({id:p.id,area:p.area,price:priceOf(p.id)||null,sold:isSold(p.id)}));lead.questions=$$('input[name="q"]:checked',reqForm).map(i=>QUESTIONS[i.value]);
+ await sendLead(lead);reqForm.hidden=true;$('#request-done').hidden=false;});
+$('#done-close').addEventListener('click',()=>dialog.close());
 $('#request-plot').addEventListener('click',()=>openRequest('selected','card'));$('#bar-request').addEventListener('click',()=>openRequest('selected','mobile-bar'));
-$('#request-shortlist').addEventListener('click',()=>openRequest('shortlist','shortlist'));$('#request-closing').addEventListener('click',()=>{if(!selected&&!favorites.length){location.hash='genplan';return;}openRequest(favorites.length>1?'shortlist':'selected','closing');});
+$('#request-shortlist').addEventListener('click',()=>openRequest('shortlist','shortlist'));
 $('#close-request').addEventListener('click',()=>dialog.close());
-dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();}});
-const status=msg=>{$('#draft-status').textContent=msg;};
-$('#copy-draft').addEventListener('click',async()=>{let ok=false;try{await navigator.clipboard.writeText(draft.value);ok=true;}catch{draft.focus();draft.select();try{ok=document.execCommand('copy');}catch{}}
- status(ok?'Текст скопирован. Ничего не отправлено — вставьте его в сообщение продавцу.':'Не удалось скопировать автоматически: текст выделен, нажмите Ctrl+C (или «Копировать» в меню).');track('request_copy',{ok,ids:draftPlots().map(p=>p.id)});});
-$('#download-draft').addEventListener('click',()=>{const ids=draftPlots().map(p=>p.id);const blob=new Blob(['﻿'+draft.value.replace(/\n/g,'\r\n')],{type:'text/plain;charset=utf-8'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='vuolie-zapros-'+(ids.length>1?'podborka':'uchastok-'+ids[0])+'.txt';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);
- status('Файл '+a.download+' сохранён на устройство. Ничего не отправлено.');track('request_download',{ids});});
-$('#share-draft').addEventListener('click',async()=>{try{await navigator.share({title:'Запрос по участкам Вуолье',text:draft.value});status('Открыто меню «Поделиться». Отправка происходит только через выбранное вами приложение.');track('request_share',{ok:true});}catch(err){status(err&&err.name==='AbortError'?'Отменено. Ничего не отправлено.':'Поделиться не удалось — скопируйте текст.');track('request_share',{ok:false});}});
+$$('dialog').forEach(d=>d.addEventListener('click',e=>{if(e.target===d){const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close();}}));
+$$('[data-close]').forEach(b=>b.addEventListener('click',()=>b.closest('dialog').close()));
+document.addEventListener('click',e=>{if(e.target.closest('.privacy-link')){e.preventDefault();$('#privacy').showModal();}});
+// local leads viewer: открыть сайт с #leads
+const CSV_COLS=['created','source','name','phone','via','plot','plots','shortlist','quiz','questions','utm','referrer'];
+const cell=v=>v==null?'':typeof v==='object'?JSON.stringify(v):String(v);
+function showLeads(){const L=loadLeads();$('#leads-table').innerHTML=L.length?'<table><tr><th>Дата</th><th>Форма</th><th>Имя</th><th>Телефон</th><th>Связь</th><th>Детали</th></tr>'+L.slice().reverse().map(l=>'<tr><td>'+new Date(l.created).toLocaleString('ru-RU')+'</td><td>'+l.source+'</td><td>'+(l.name||'')+'</td><td>'+l.phone+'</td><td>'+(l.via||'')+'</td><td>'+cell(l.plots?l.plots.map(p=>'№'+p.id).join(', '):l.quiz?Object.values(l.quiz).filter(Boolean).join(' · '):l.plot?'№'+l.plot:'')+'</td></tr>').join('')+'</table>':'<p>Пока пусто.</p>';$('#leads-dialog').showModal();}
+$('#leads-csv').addEventListener('click',()=>{const rows=[CSV_COLS.join(';'),...loadLeads().map(l=>CSV_COLS.map(c=>'"'+cell(l[c]).replace(/"/g,'""')+'"').join(';'))];const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'}));a.download='vuolie-leads.csv';a.click();});
+$('#leads-clear').addEventListener('click',()=>{if(confirm('Удалить все локальные заявки?')){localStorage.removeItem(LEADS_KEY);showLeads();}});
+if(location.hash==='#leads')showLeads();window.addEventListener('hashchange',()=>{if(location.hash==='#leads')showLeads();});
 
 // ---- Mobile sticky bar: only while the selector is on screen; content gets matching padding ----
 const bar=$('#mobile-bar');let planVisible=false;
