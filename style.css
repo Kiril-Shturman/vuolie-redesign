@@ -496,3 +496,38 @@ html.fs-lock,html.fs-lock body{overflow:hidden;overscroll-behavior:none}
 }
 @media(max-width:760px){.map-card.fs .fs-toggle{display:none}}
 .map-card.fs .fs-toggle{background:var(--gold)}
+/* ===== Bayside-style plan: aerial look, badge numbers, POIs, clouds ===== */
+.plot polygon{fill:#ffffff14;stroke:#ffffffd9;stroke-width:1.2}
+.plot.sold polygon{fill:#10201a59;stroke:#ffffff59}
+.plot:hover polygon{fill:#ffffff40}
+.plot.fav polygon{fill:#f2c4c44d}
+.plot.active polygon,.explorer[data-color=price] .plot.active polygon{fill:#d9a64873;stroke:var(--gold);stroke-width:3}
+.explorer[data-color=price] .plot.tier-0 polygon{fill:#e9f2c88c}.explorer[data-color=price] .plot.tier-1 polygon{fill:#c6e09a8c}.explorer[data-color=price] .plot.tier-2 polygon{fill:#f2d77c8c}.explorer[data-color=price] .plot.tier-3 polygon{fill:#eca95a99}.explorer[data-color=price] .plot.tier-4 polygon{fill:#d9704aa6}
+.plot .badge{fill:#fff;stroke:#1f3a2c33;stroke-width:1;vector-effect:non-scaling-stroke;pointer-events:none}
+.plot.sold .badge{fill:#5d665ecc}
+.plot.fav .badge{fill:#f6c1c1}
+.plot.active .badge{fill:var(--gold)}
+.plot text{display:none;font-size:17px;font-weight:700;fill:#1f3a2c;stroke:none;paint-order:normal;font-family:Manrope,Arial,sans-serif}
+.plot.sold text{fill:#e4e8de}
+.show-labels .plot text{display:block}
+.plot.filtered{opacity:.25}
+/* POIs */
+.poi{cursor:pointer}.poi-dot{fill:#2b7fd0;stroke:#fff;stroke-width:4;vector-effect:non-scaling-stroke}.poi text{fill:#fff;font-size:24px;font-weight:700;text-anchor:middle;pointer-events:none}
+.poi-pulse{fill:#2b7fd033;animation:poiPulse 2.2s infinite;transform-box:fill-box;transform-origin:center}
+@keyframes poiPulse{0%{transform:scale(.6);opacity:1}100%{transform:scale(1.6);opacity:0}}
+.poi.on .poi-dot{fill:var(--gold)}
+.poi-row{display:flex;align-items:center;gap:12px;padding:0 0 14px;flex-wrap:wrap}.poi-row .chips button[aria-pressed=true]{background:#2b7fd0;border-color:#2b7fd0;color:#fff}
+.poi-card{position:absolute;z-index:13;width:240px;background:#fbfaf5;border-radius:16px;overflow:hidden;box-shadow:0 20px 50px #0006;animation:popIn .18s ease-out;font-size:13px;color:var(--muted)}
+.poi-card img{height:130px;object-fit:cover}.poi-card strong{display:block;color:var(--ink);font-size:16px;padding:12px 14px 2px}.poi-card span{display:block;padding:0 14px 14px;line-height:1.45}
+/* clouds / mist on the edges */
+.map-clouds{position:absolute;inset:0;z-index:2;pointer-events:none;
+ background:
+  radial-gradient(38% 26% at 2% 4%,#ffffffcc,#ffffff00 70%),
+  radial-gradient(30% 22% at 98% 2%,#ffffffb3,#ffffff00 70%),
+  radial-gradient(34% 26% at 100% 98%,#ffffffb3,#ffffff00 70%),
+  radial-gradient(30% 22% at 0% 100%,#ffffff99,#ffffff00 70%);
+ filter:blur(6px)}
+.map-card .map-viewport{position:relative;z-index:1}
+.map-card>.map-overlay-controls,.map-card>.map-legend,.map-card>.map-hint,.map-card>.map-open,.map-card>.fs-bar{z-index:12}
+@media(max-width:760px){.poi-row{flex-wrap:nowrap}.poi-row .ex-label{display:none}.poi-card{width:210px}.poi-card img{height:110px}}
+.plot.active text{fill:#1d1606}

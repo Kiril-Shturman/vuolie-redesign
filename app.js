@@ -85,17 +85,17 @@ const ns='http://www.w3.org/2000/svg',svg=$('#masterplan'),vp=$('#map-viewport')
 const centroids=new Map();let bounds={x0:Infinity,y0:Infinity,x1:-Infinity,y1:-Infinity};
 plots.forEach(p=>{const g=document.createElementNS(ns,'g');g.classList.add('plot');g.classList.toggle('sold',isSold(p.id));g.dataset.id=p.id;g.setAttribute('role','button');g.setAttribute('tabindex','-1');g.setAttribute('aria-label','Участок '+p.id+', '+fmt(p.area)+' соток, '+(isSold(p.id)?'продан по источнику':money(priceOf(p.id))+' за участок'+(p.id===ANOMALY?', цена не подтверждена':'')));
  const polygon=document.createElementNS(ns,'polygon');polygon.setAttribute('points',p.points);const c=p.points.split(' ').map(Number),n=c.length/2;let sx=0,sy=0;for(let i=0;i<c.length;i+=2){sx+=c[i];sy+=c[i+1];bounds.x0=Math.min(bounds.x0,c[i]);bounds.x1=Math.max(bounds.x1,c[i]);bounds.y0=Math.min(bounds.y0,c[i+1]);bounds.y1=Math.max(bounds.y1,c[i+1]);}
- centroids.set(p.id,[sx/n,sy/n]);const label=document.createElementNS(ns,'text');label.setAttribute('x',sx/n);label.setAttribute('y',sy/n+7);label.textContent=p.id;g.append(polygon,label);$('#plots').append(g);});
+ centroids.set(p.id,[sx/n,sy/n]);const label=document.createElementNS(ns,'text');label.setAttribute('x',sx/n);label.setAttribute('y',sy/n+6.5);label.textContent=p.id;const badge=document.createElementNS(ns,'circle');badge.setAttribute('cx',sx/n);badge.setAttribute('cy',sy/n);badge.setAttribute('r',17);badge.classList.add('badge');g.append(polygon,badge,label);$('#plots').append(g);});
 const cam={cx:0,cy:0,s:1};let fitScale=1;
 function viewSize(){return [vp.clientWidth||1,vp.clientHeight||1];}
 function computeFit(){const [w,h]=viewSize(),pad=60;fitScale=Math.min(w/(bounds.x1-bounds.x0+pad*2),h/(bounds.y1-bounds.y0+pad*2));}
 const minScale=()=>{const [w,h]=viewSize();return Math.max(fitScale*.5,w/(IMG.x1-IMG.x0),h/(IMG.y1-IMG.y0));},maxScale=()=>Math.max(fitScale*8,3.2);
 function applyCam(){const [w,h]=viewSize();cam.s=Math.min(maxScale(),Math.max(minScale(),cam.s));const vw=w/cam.s,vh=h/cam.s;
- cam.cx=Math.min(Math.max(cam.cx,bounds.x0),bounds.x1);cam.cy=Math.min(Math.max(cam.cy,bounds.y0),bounds.y1);
+ cam.cx=Math.min(Math.max(cam.cx,bounds.x0-900),bounds.x1+900);cam.cy=Math.min(Math.max(cam.cy,bounds.y0-1400),bounds.y1+900);
  // keep the view inside the masterplan image whenever it is larger than the view (no empty bands)
  if(vw<=IMG.x1-IMG.x0+1)cam.cx=Math.min(Math.max(cam.cx,IMG.x0+vw/2),IMG.x1-vw/2);if(vh<=IMG.y1-IMG.y0+1)cam.cy=Math.min(Math.max(cam.cy,IMG.y0+vh/2),IMG.y1-vh/2);
  svg.setAttribute('viewBox',[cam.cx-vw/2,cam.cy-vh/2,vw,vh].map(v=>v.toFixed(2)).join(' '));svg.classList.toggle('show-labels',cam.s*21>=8.5);
- positionPop();$('#zoom-in').disabled=cam.s>=maxScale()-1e-6;$('#zoom-out').disabled=cam.s<=minScale()+1e-6;}
+ positionPop();if(typeof positionPoi==='function'){positionPoi();const k=Math.max(.5,15/(22*cam.s));$$('.poi').forEach(g=>{const q=POIS.find(x=>x.id===g.dataset.poi);g.setAttribute('transform',`translate(${q.x} ${q.y}) scale(${k.toFixed(3)})`);});}$('#zoom-in').disabled=cam.s>=maxScale()-1e-6;$('#zoom-out').disabled=cam.s<=minScale()+1e-6;}
 function fitAll(){computeFit();cam.s=fitScale;cam.cx=(bounds.x0+bounds.x1)/2;cam.cy=(bounds.y0+bounds.y1)/2;applyCam();}
 function zoomBy(f,px,py){const [w,h]=viewSize();px=px??w/2;py=py??h/2;const wx=cam.cx+(px-w/2)/cam.s,wy=cam.cy+(py-h/2)/cam.s;cam.s=Math.min(maxScale(),Math.max(minScale(),cam.s*f));cam.cx=wx-(px-w/2)/cam.s;cam.cy=wy-(py-h/2)/cam.s;applyCam();}
 function centerOn(id,minS){const c=centroids.get(id);if(!c)return;if(minS)cam.s=Math.max(cam.s,minS);cam.cx=c[0];cam.cy=c[1];applyCam();}
@@ -109,7 +109,7 @@ svg.addEventListener('pointermove',e=>{if(!drag||!pointers.has(e.pointerId))retu
  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!dragged&&Math.hypot(dx,dy)<6)return;if(!dragged){dragged=true;svg.setPointerCapture?.(e.pointerId);svg.classList.add('dragging');}cam.cx=drag.cx-dx/cam.s;cam.cy=drag.cy-dy/cam.s;applyCam();});
 const endPointer=e=>{pointers.delete(e.pointerId);if(!pointers.size){drag=null;svg.classList.remove('dragging');}else{const [p]=[...pointers.values()];drag={x:p[0],y:p[1],cx:cam.cx,cy:cam.cy,s:cam.s,dist:null};}};
 ['pointerup','pointercancel','lostpointercapture'].forEach(t=>svg.addEventListener(t,endPointer));
-svg.addEventListener('click',e=>{if(isPreview()){e.preventDefault();e.stopPropagation();const g=e.target.closest('.plot');openFs(g&&!g.classList.contains('filtered')?+g.dataset.id:null);return;}if(dragged){e.preventDefault();dragged=false;return;}const g=e.target.closest('.plot');if(g&&!g.classList.contains('filtered')){selectPlot(+g.dataset.id,{via:'map'});openPop();g.focus({preventScroll:true});}else closePop();},true);
+svg.addEventListener('click',e=>{if(isPreview()){e.preventDefault();e.stopPropagation();const g=e.target.closest('.plot');openFs(g&&!g.classList.contains('filtered')?+g.dataset.id:null);return;}if(dragged){e.preventDefault();dragged=false;return;}const g=e.target.closest('.plot');if(g&&!g.classList.contains('filtered')){selectPlot(+g.dataset.id,{via:'map'});openPop();g.focus({preventScroll:true});}else{closePop();if(!e.target.closest('.poi'))hidePoi();}},true);
 svg.addEventListener('dblclick',e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoomBy(1.8,e.clientX-r.left,e.clientY-r.top);});
 vp.addEventListener('wheel',e=>{if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();const r=vp.getBoundingClientRect();zoomBy(e.deltaY<0?1.25:.8,e.clientX-r.left,e.clientY-r.top);},{passive:false});
 vp.addEventListener('keydown',e=>{if(e.target!==vp)return;const step=80/cam.s,k=e.key;if(k==='ArrowLeft')cam.cx-=step;else if(k==='ArrowRight')cam.cx+=step;else if(k==='ArrowUp')cam.cy-=step;else if(k==='ArrowDown')cam.cy+=step;else if(k==='+'||k==='=')return e.preventDefault(),zoomBy(1.5);else if(k==='-')return e.preventDefault(),zoomBy(1/1.5);else if(k==='0')return e.preventDefault(),fitAll();else return;e.preventDefault();applyCam();});
@@ -150,7 +150,7 @@ function updateSelectionUI(){const p=plotById.get(selected);
  updateSave();positionPop();}
 // popover anchored to the plot (desktop) / bottom sheet (mobile)
 const pop=$('#plot-pop');let popOpen=false;
-function openPop(){if(!selected||view!=='map')return;popOpen=true;pop.hidden=false;$('#map-tip').hidden=true;if(mobile()){const c=centroids.get(selected),[,h]=viewSize();cam.s=Math.max(cam.s,fitScale*2.2);cam.cx=c[0];cam.cy=c[1]+h*.22/cam.s;applyCam();}positionPop();}
+function openPop(){if(!selected||view!=='map')return;if(typeof hidePoi==='function')hidePoi();popOpen=true;pop.hidden=false;$('#map-tip').hidden=true;if(mobile()){const c=centroids.get(selected),[,h]=viewSize();cam.s=Math.max(cam.s,fitScale*2.2);cam.cx=c[0];cam.cy=c[1]+h*.22/cam.s;applyCam();}positionPop();}
 function closePop(){popOpen=false;pop.hidden=true;}
 function positionPop(){if(!popOpen||!selected)return;if(mobile()){pop.style.left='';pop.style.top='';pop.classList.add('sheet');return;}pop.classList.remove('sheet');
  const c=centroids.get(selected),[w,h]=viewSize(),x=(c[0]-cam.cx)*cam.s+w/2,y=(c[1]-cam.cy)*cam.s+h/2,pw=pop.offsetWidth||300,ph=pop.offsetHeight||360,gap=28;
@@ -209,6 +209,24 @@ $('#map-open').addEventListener('click',()=>openFs());$('#fs-toggle').addEventLi
 $('#fs-chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.area){filters.area=b.dataset.area;}else{filters.status=filters.status==='saved'?'available':'saved';}syncChips();applyFilters('fs');syncFsBar();});
 $$('.fs-color button').forEach(b=>b.addEventListener('click',()=>{setColor(b.dataset.color);syncFsBar();}));
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fs&&!popOpen)closeFs();});
+
+// ---- Points of interest on the plan (only objects visible on the masterplan image) ----
+const POIS=[
+ {id:'lake',x:1990,y:-60,title:'Озеро Сиркоярви',text:'500 м от посёлка, 5 минут пешком. Прогулочная дорожка вдоль берега.',img:'assets/shore.jpeg',icon:'≈'},
+ {id:'gate',x:2195,y:1169,title:'Въезд в посёлок',text:'КПП, круглосуточная охрана и видеонаблюдение. Подъезд по финской брусчатке.',img:'assets/forest.jpeg',icon:'⌂'},
+ {id:'pond',x:2304,y:1953,title:'Пруд',text:'Водоём внутри посёлка — рядом общественная зона.',img:'',icon:'○'}];
+const poiLayer=document.createElementNS(ns,'g');poiLayer.id='pois';svg.append(poiLayer);
+POIS.forEach(p=>{const g=document.createElementNS(ns,'g');g.classList.add('poi');g.dataset.poi=p.id;g.setAttribute('transform',`translate(${p.x} ${p.y})`);
+ g.innerHTML='<circle class="poi-pulse" r="34"/><circle class="poi-dot" r="22"/><text y="8">'+p.icon+'</text>';poiLayer.append(g);});
+const poiCard=$('#poi-card');let poiOpen=null;
+function showPoi(id,fly){const p=POIS.find(x=>x.id===id);if(!p)return;closePop();poiOpen=id;$$('.poi').forEach(g=>g.classList.toggle('on',g.dataset.poi===id));$$('#poi-chips button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.poi===id)));
+ poiCard.innerHTML=(p.img?'<img src="'+p.img+'" alt="">':'')+'<strong>'+p.title+'</strong><span>'+p.text+'</span>';poiCard.hidden=false;
+ if(fly){computeFit();cam.s=fitScale*(mobile()?1.5:1.15);cam.cx=p.x;cam.cy=p.y;applyCam();}positionPoi();track('poi',{id});}
+function hidePoi(){poiOpen=null;poiCard.hidden=true;$$('.poi').forEach(g=>g.classList.remove('on'));$$('#poi-chips button').forEach(b=>b.setAttribute('aria-pressed','false'));}
+function positionPoi(){if(!poiOpen)return;const p=POIS.find(x=>x.id===poiOpen),[w,h]=viewSize(),x=(p.x-cam.cx)*cam.s+w/2,y=(p.y-cam.cy)*cam.s+h/2,cw=poiCard.offsetWidth||240,chh=poiCard.offsetHeight||200;
+ poiCard.style.left=Math.max(10,Math.min(x-cw/2,w-cw-10))+'px';poiCard.style.top=Math.max(10,Math.min(y-chh-34,h-chh-10))+'px';}
+poiLayer.addEventListener('click',e=>{const g=e.target.closest('.poi');if(g){e.stopPropagation();showPoi(g.dataset.poi);}});
+$('#poi-chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(poiOpen===b.dataset.poi)hidePoi();else{if(isPreview())openFs();requestAnimationFrame(()=>showPoi(b.dataset.poi,true));}});
 // ---- Leads ----
 // LEAD_ENDPOINT: URL бэкенда (POST JSON). Пока пусто — заявки копятся в localStorage ('vuolie_leads'), открыть: #leads
 const LEAD_ENDPOINT='';
