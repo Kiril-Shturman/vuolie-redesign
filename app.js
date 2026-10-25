@@ -69,7 +69,7 @@ function applyFilters(source){listLimit=PAGE;visiblePlots=sortPlots(plots.filter
  const n=visiblePlots.length;$('#result-count').innerHTML='<strong>'+n+'</strong> '+plural(n,'участок','участка','участков')+' <span>из 233</span>';
  const count=activeFilterCount();$('#reset-filters').textContent=count?'Сбросить · '+count:'Сбросить';$('#reset-filters').disabled=!count;
  const p78=plotById.get(ANOMALY);const hidden78=budgetActive()&&filters.status!=='sold'&&!(filters.status==='saved'&&!favorites.includes(ANOMALY))&&(()=>{const f=filters;filters={...f,min:PRICE_LOW,max:PRICE_HIGH};const ok=matches(p78);filters=f;return ok;})();$('#anomaly-note').hidden=!hidden78;
- $('#empty-results').hidden=n>0;$('#map-panel').classList.toggle('is-empty',!n);
+ $('#empty-results').hidden=n>0;if(typeof fs!=='undefined'&&fs)syncFsBar();$('#map-panel').classList.toggle('is-empty',!n);
  renderList();ensureRoving();if(n&&(!selected||!ids.has(selected))&&source!=='init-keep'){if(!selected||source)selectPlot(visiblePlots[0].id,{quiet:true});}else updateSelectionUI();
  if(source&&source!=='init'&&source!=='init-keep'){clearTimeout(applyFilters.t);applyFilters.t=setTimeout(()=>track('filter_change',{area:filters.area,min:filters.min,max:filters.max,status:filters.status,results:n,via:source}),400);}}
 function plotCardHTML(p){const price=priceOf(p.id),sold=isSold(p.id),saved=favorites.includes(p.id),warn=p.id===ANOMALY;
@@ -103,13 +103,13 @@ function inView(id,margin=40){const c=centroids.get(id),[w,h]=viewSize();const x
 $('#zoom-in').addEventListener('click',()=>{zoomBy(1.5);track('map_zoom',{dir:'in'});});$('#zoom-out').addEventListener('click',()=>{zoomBy(1/1.5);track('map_zoom',{dir:'out'});});$('#zoom-reset').addEventListener('click',()=>{fitAll();track('map_zoom',{dir:'fit'});});
 // Pointer pan + pinch; a drag never triggers plot selection.
 const pointers=new Map();let drag=null,dragged=false;
-svg.addEventListener('pointerdown',e=>{if(e.button!==0&&e.pointerType==='mouse')return;pointers.set(e.pointerId,[e.clientX,e.clientY]);dragged=false;drag={x:e.clientX,y:e.clientY,cx:cam.cx,cy:cam.cy,s:cam.s,dist:null};if(pointers.size===2){const [a,b]=[...pointers.values()];drag.dist=Math.hypot(a[0]-b[0],a[1]-b[1]);drag.mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];}});
+svg.addEventListener('pointerdown',e=>{if(isPreview())return;if(e.button!==0&&e.pointerType==='mouse')return;pointers.set(e.pointerId,[e.clientX,e.clientY]);dragged=false;drag={x:e.clientX,y:e.clientY,cx:cam.cx,cy:cam.cy,s:cam.s,dist:null};if(pointers.size===2){const [a,b]=[...pointers.values()];drag.dist=Math.hypot(a[0]-b[0],a[1]-b[1]);drag.mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];}});
 svg.addEventListener('pointermove',e=>{if(!drag||!pointers.has(e.pointerId))return;pointers.set(e.pointerId,[e.clientX,e.clientY]);const r=vp.getBoundingClientRect();
  if(pointers.size>=2&&drag.dist){const [a,b]=[...pointers.values()];const dist=Math.hypot(a[0]-b[0],a[1]-b[1]);const mid=[(a[0]+b[0])/2-r.left,(a[1]+b[1])/2-r.top];cam.s=drag.s;cam.cx=drag.cx;cam.cy=drag.cy;zoomBy(dist/drag.dist,mid[0],mid[1]);dragged=true;return;}
  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(!dragged&&Math.hypot(dx,dy)<6)return;if(!dragged){dragged=true;svg.setPointerCapture?.(e.pointerId);svg.classList.add('dragging');}cam.cx=drag.cx-dx/cam.s;cam.cy=drag.cy-dy/cam.s;applyCam();});
 const endPointer=e=>{pointers.delete(e.pointerId);if(!pointers.size){drag=null;svg.classList.remove('dragging');}else{const [p]=[...pointers.values()];drag={x:p[0],y:p[1],cx:cam.cx,cy:cam.cy,s:cam.s,dist:null};}};
 ['pointerup','pointercancel','lostpointercapture'].forEach(t=>svg.addEventListener(t,endPointer));
-svg.addEventListener('click',e=>{if(dragged){e.preventDefault();dragged=false;return;}const g=e.target.closest('.plot');if(g&&!g.classList.contains('filtered')){selectPlot(+g.dataset.id,{via:'map'});openPop();g.focus({preventScroll:true});}else closePop();},true);
+svg.addEventListener('click',e=>{if(isPreview()){e.preventDefault();e.stopPropagation();const g=e.target.closest('.plot');openFs(g&&!g.classList.contains('filtered')?+g.dataset.id:null);return;}if(dragged){e.preventDefault();dragged=false;return;}const g=e.target.closest('.plot');if(g&&!g.classList.contains('filtered')){selectPlot(+g.dataset.id,{via:'map'});openPop();g.focus({preventScroll:true});}else closePop();},true);
 svg.addEventListener('dblclick',e=>{e.preventDefault();const r=vp.getBoundingClientRect();zoomBy(1.8,e.clientX-r.left,e.clientY-r.top);});
 vp.addEventListener('wheel',e=>{if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();const r=vp.getBoundingClientRect();zoomBy(e.deltaY<0?1.25:.8,e.clientX-r.left,e.clientY-r.top);},{passive:false});
 vp.addEventListener('keydown',e=>{if(e.target!==vp)return;const step=80/cam.s,k=e.key;if(k==='ArrowLeft')cam.cx-=step;else if(k==='ArrowRight')cam.cx+=step;else if(k==='ArrowUp')cam.cy-=step;else if(k==='ArrowDown')cam.cy+=step;else if(k==='+'||k==='=')return e.preventDefault(),zoomBy(1.5);else if(k==='-')return e.preventDefault(),zoomBy(1/1.5);else if(k==='0')return e.preventDefault(),fitAll();else return;e.preventDefault();applyCam();});
@@ -193,6 +193,22 @@ function resetFilters(){filters={...DEFAULTS};syncChips();renderPrice();applyFil
 $('#reset-filters').addEventListener('click',resetFilters);$('#empty-reset').addEventListener('click',()=>{resetFilters();$('#area-chips button').focus();});
 $('#show-78').addEventListener('click',()=>{selectPlot(ANOMALY,{via:'anomaly-note'});locatePlot();openPop();});
 
+
+// ---- Fullscreen plan (mobile: preview in page → tap opens fullscreen) ----
+const mapCard=$('#map-panel');let fs=false;
+const isPreview=()=>mobile()&&!fs;
+function syncFsBar(){const n=visiblePlots.length;$('#fs-count').textContent=n+' '+plural(n,'участок','участка','участков');
+ $$('#fs-chips [data-area]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.area===filters.area)));$$('#fs-chips [data-fsstatus]').forEach(b=>b.setAttribute('aria-pressed',String(filters.status==='saved')));
+ const c=$('.explorer').dataset.color;$$('.fs-color button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.color===c)));}
+function fsCamera(){computeFit();const [w,h]=viewSize(),bw=bounds.x1-bounds.x0,bh=bounds.y1-bounds.y0;cam.s=h>w*1.2?Math.max(fitScale,h*.62/bh):Math.max(fitScale,Math.min(w*.95/bw,h*.9/bh));cam.cx=(bounds.x0+bounds.x1)/2;cam.cy=(bounds.y0+bounds.y1)/2;applyCam();}
+function openFs(id){if(fs)return;fs=true;setView('map');mapCard.classList.add('fs');document.documentElement.classList.add('fs-lock');syncFsBar();history.pushState({vuolieFs:1},'');
+ requestAnimationFrame(()=>{fsCamera();if(id){selectPlot(id,{via:'map'});openPop();}});track('map_fullscreen',{open:true});}
+function closeFs(fromPop){if(!fs)return;fs=false;closePop();mapCard.classList.remove('fs');document.documentElement.classList.remove('fs-lock');if(!fromPop&&history.state&&history.state.vuolieFs)history.back();requestAnimationFrame(initialCamera);}
+window.addEventListener('popstate',()=>{if(fs)closeFs(true);});
+$('#map-open').addEventListener('click',()=>openFs());$('#fs-toggle').addEventListener('click',()=>fs?closeFs():openFs());$('#fs-close').addEventListener('click',()=>closeFs());
+$('#fs-chips').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.area){filters.area=b.dataset.area;}else{filters.status=filters.status==='saved'?'available':'saved';}syncChips();applyFilters('fs');syncFsBar();});
+$$('.fs-color button').forEach(b=>b.addEventListener('click',()=>{setColor(b.dataset.color);syncFsBar();}));
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fs&&!popOpen)closeFs();});
 // ---- Leads ----
 // LEAD_ENDPOINT: URL бэкенда (POST JSON). Пока пусто — заявки копятся в localStorage ('vuolie_leads'), открыть: #leads
 const LEAD_ENDPOINT='';

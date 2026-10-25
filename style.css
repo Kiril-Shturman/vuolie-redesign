@@ -470,3 +470,29 @@ h2{font-size:clamp(36px,4.2vw,64px)}
 @media(max-width:760px){.plan-section .map-viewport{height:min(64svh,540px)}.plan-section .explorer{padding:0}.plan-section .map-card>.map-legend{left:12px;top:12px}}
 .plan-section .map-viewport{background:#2c4a30}
 @media(max-width:760px){.plan-section .map-viewport{height:min(56svh,440px)}}
+/* fullscreen plan */
+.fs-toggle{margin-top:8px;width:44px;height:44px;border:0;border-radius:10px;background:#fcfbf6;box-shadow:0 6px 18px #0004;font-size:20px}
+.fs-bar,.map-open{display:none}
+html.fs-lock,html.fs-lock body{overflow:hidden;overscroll-behavior:none}
+.map-card.fs{position:fixed!important;inset:0;z-index:60;margin:0!important;border-radius:0;height:100dvh;display:flex;flex-direction:column;background:#2c4a30}
+.map-card.fs .map-viewport{flex:1;height:auto!important;min-height:0}
+.map-card.fs .fs-bar{display:block;position:absolute;left:0;right:0;top:0;z-index:13;padding:max(10px,env(safe-area-inset-top)) 10px 10px;background:linear-gradient(#0f2118d9,#0f211800)}
+.fs-top{display:flex;align-items:center;gap:10px}
+.fs-close{width:44px;height:44px;border-radius:12px;border:0;background:#fcfbf6;font-size:20px;box-shadow:0 6px 18px #0004;flex:none}
+.fs-title{flex:1;color:#fff;display:flex;flex-direction:column;line-height:1.2}.fs-title strong{font-size:17px}.fs-title span{font-size:12px;opacity:.85}
+.fs-color{background:#fcfbf6e6}.fs-color button{padding:7px 11px}
+.fs-chips{margin-top:10px}.fs-chips button{background:#fcfbf6e6;border-color:transparent}.fs-chips button[aria-pressed=true]{background:var(--gold);color:#1d1606}
+.map-card.fs .map-overlay-controls{top:auto;bottom:max(16px,env(safe-area-inset-bottom));right:12px}
+.map-card.fs>.map-legend{top:auto!important;bottom:max(16px,env(safe-area-inset-bottom));left:12px}
+.map-card.fs .map-hint{display:none}
+.map-card.fs .plot-pop.sheet{bottom:max(10px,env(safe-area-inset-bottom));z-index:14}
+.map-card.fs .plot-pop:not([hidden])~.map-overlay-controls{display:none}
+@media(max-width:760px){
+ .map-card:not(.fs) .map-viewport{touch-action:pan-y}
+ .map-card:not(.fs) .map-overlay-controls{display:none}
+ .map-card:not(.fs) .map-open{display:inline-flex;align-items:center;gap:8px;position:absolute;left:50%;bottom:16px;transform:translateX(-50%);z-index:12;border:0;border-radius:100px;padding:13px 22px;background:var(--gold);color:#1d1606;font-weight:700;font-size:15px;box-shadow:0 10px 26px #0006;white-space:nowrap}
+ .map-card:not(.fs)>.map-legend{display:none!important}
+ .map-card.fs>.map-legend{font-size:11px}
+}
+@media(max-width:760px){.map-card.fs .fs-toggle{display:none}}
+.map-card.fs .fs-toggle{background:var(--gold)}
