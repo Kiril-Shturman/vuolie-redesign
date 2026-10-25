@@ -1,0 +1,6 @@
+node_modules/
+.preview-tools/
+*.log
+.env*
+pricing-source.json
+PREVIEW-STATUS.md
