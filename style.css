@@ -538,3 +538,4 @@ html.fs-lock,html.fs-lock body{overflow:hidden;overscroll-behavior:none}
 footer .brand b{font-size:19px}
 @media(max-width:760px){.brand img{width:26px;height:27px}.brand b{font-size:18px}}
 .brand b{letter-spacing:.08em}
+.brand b{letter-spacing:.01em;font-size:22px}@media(max-width:760px){.brand b{font-size:19px}}
