@@ -696,3 +696,13 @@ video.hero-bg{width:100%;object-fit:cover;transform:none}
  .m3-mini.folded{left:auto;width:auto}
 }
 @media(max-width:760px){.m3-mini.folded{left:auto;right:10px;padding:6px 8px}.m3-mini.folded .mm-head{margin:0;gap:10px}.m3-mini.folded .mm-head b:before{content:'Мини-карта · '}}
+/* about map: scheme + route, smaller */
+.about-grid{grid-template-columns:1.15fr .85fr}
+.about-map{aspect-ratio:4/4.4;max-height:560px}.about-map .leaf{background:#eceae4}
+.vu-spb{display:flex;align-items:center;gap:6px}.vu-spb i{width:16px;height:16px;border-radius:50%;background:var(--ink);border:3px solid #fff;box-shadow:0 2px 6px #0004;flex:none}
+.vu-spb span{white-space:nowrap;font-size:12px;font-weight:700;color:var(--ink);background:#fff;padding:3px 8px;border-radius:999px;box-shadow:0 2px 6px #0002}
+.vu-eta{white-space:nowrap;font-size:12px;color:var(--ink);background:#fbfaf5;border:1px solid var(--gold);padding:4px 10px;border-radius:999px;box-shadow:0 4px 10px #0002;width:auto!important}
+.vu-eta b{font-size:13px}
+@media(max-width:900px){.about-grid{grid-template-columns:1fr}.about-map{aspect-ratio:1/1;max-height:none}}
+.vu-tiles{filter:grayscale(1) brightness(1.06) contrast(.9)}
+.about-map img.leaflet-tile{width:256.6px!important;height:256.6px!important}

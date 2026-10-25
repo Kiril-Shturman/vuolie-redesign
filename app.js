@@ -308,15 +308,20 @@ gallery.forEach((button,i)=>button.addEventListener('click',()=>{showImage(i);li
  addEventListener('scroll',()=>{if(scrollY>120)all();},{passive:true});hero.addEventListener('focusin',all);
 })();
 
-// ---- Location map (Leaflet + CARTO Voyager, no ads) ----
+// ---- Location map: scheme + route from St Petersburg centre (route precomputed via OSRM, assets/route-spb.json) ----
 (()=>{const el=$('#about-map');if(!el||!window.L)return;
- const V=[60.332164,30.570857],LAKE=[60.3403,30.5724];
- const init=()=>{const m=L.map(el,{scrollWheelZoom:false,dragging:!L.Browser.mobile,tap:false,zoomControl:true,attributionControl:true}).setView([(V[0]+LAKE[0])/2-.0005,(V[1]+LAKE[1])/2],mobile()?14:15);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:18,attribution:'Снимки © Esri, Maxar, Earthstar Geographics'}).addTo(m);
+ const V=[60.332164,30.570857],SPB=[59.9391,30.3159];
+ const init=async()=>{const m=L.map(el,{scrollWheelZoom:false,dragging:!L.Browser.mobile,tap:false,zoomControl:true,attributionControl:true,zoomSnap:.25});
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,className:'vu-tiles',attribution:'© OpenStreetMap'}).addTo(m);
+  let r={km:61,min:70,line:[SPB,V]};try{r=await (await fetch('assets/route-spb.json')).json();}catch{}
+  L.polyline(r.line,{color:'#ffffff',weight:9,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(m);
+  const route=L.polyline(r.line,{color:'#d9a648',weight:5,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(m);
   const pin=L.divIcon({className:'vu-pin',html:'<div class="vu-pin-in"><img src="assets/logo.svg" alt=""></div><span>Вуолье</span>',iconSize:[52,52],iconAnchor:[26,52]});
   L.marker(V,{icon:pin,keyboard:false}).addTo(m);
-  L.marker(LAKE,{icon:L.divIcon({className:'vu-label',html:'оз. Сиркоярви',iconSize:[120,20],iconAnchor:[60,10]}),interactive:false}).addTo(m);
-};
+  L.marker(SPB,{icon:L.divIcon({className:'vu-spb',html:'<i></i><span>Центр Петербурга</span>',iconSize:[16,16],iconAnchor:[8,8]}),keyboard:false}).addTo(m);
+  const mid=r.line[Math.floor(r.line.length*.45)];
+  L.marker(mid,{icon:L.divIcon({className:'vu-eta',html:'<b>'+Math.round(r.km)+' км</b> · ~'+Math.round(r.min/5)*5+' мин',iconSize:[130,28],iconAnchor:[-10,14]}),interactive:false}).addTo(m);
+  m.fitBounds(route.getBounds(),{paddingTopLeft:[40,80],paddingBottomRight:[40,mobile()?110:90]});};
  if('IntersectionObserver' in window){const io=new IntersectionObserver(e=>{if(e[0].isIntersecting){io.disconnect();init();}},{rootMargin:'300px'});io.observe(el);}else init();
 })();
 
