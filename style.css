@@ -460,3 +460,13 @@ h2{font-size:clamp(36px,4.2vw,64px)}
 @media(max-width:760px){.map-card>.map-legend{left:8px;top:8px;bottom:auto;font-size:11px;gap:10px;padding:6px 10px}.map-card>.map-legend i{width:10px;height:10px}.price-legend .grad{width:80px}}
 @media(max-width:760px){.map-viewport{height:min(58svh,480px)}}
 @media(max-width:760px){.map-viewport{height:min(52svh,400px)}}
+/* full-bleed plan */
+.plan-section{overflow-x:clip}
+.plan-section .explorer{background:none;border:0;box-shadow:none;padding:0;border-radius:0}
+.plan-section .map-card{margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);border-radius:0}
+.plan-section .map-viewport{height:clamp(600px,calc(100svh - 150px),900px)}
+.plan-section .results-bar{padding:16px 0}.plan-section .ex-toolbar{padding:0 0 18px}
+.plan-section .empty-results{margin-left:0;margin-right:0}
+@media(max-width:760px){.plan-section .map-viewport{height:min(64svh,540px)}.plan-section .explorer{padding:0}.plan-section .map-card>.map-legend{left:12px;top:12px}}
+.plan-section .map-viewport{background:#2c4a30}
+@media(max-width:760px){.plan-section .map-viewport{height:min(56svh,440px)}}
