@@ -540,3 +540,7 @@ footer .brand b{font-size:19px}
 .brand b{letter-spacing:.08em}
 .brand b{letter-spacing:.01em;font-size:22px}@media(max-width:760px){.brand b{font-size:19px}}
 .brand b{font-family:var(--serif);font-weight:500;font-size:34px;letter-spacing:-1.5px;line-height:.9;margin-top:-4px}footer .brand b{font-size:30px}@media(max-width:760px){.brand b{font-size:30px}}
+
+video.hero-bg{width:100%;object-fit:cover;transform:none}
+.hero:before{background:linear-gradient(90deg,#0d1f17d9 0%,#0d1f1799 40%,#0d1f1720 75%),linear-gradient(0deg,#0d1f17b3 0%,transparent 40%)}
+@media(max-width:760px){.hero:before{background:linear-gradient(180deg,#0d1f1799 0%,#0d1f17cc 60%,#0d1f17f2 100%)}}

@@ -21,3 +21,5 @@ in exactly one of the two sets. These values are embedded in `app.js`. Price per
 
 Plot 78 is listed at 210 000 ₽ in the source (likely 2 100 000 ₽); it is preserved as published, flagged in the UI
 and excluded from the advertised minimum and from narrowed budget results.
+
+- `assets/hero.mp4`, `assets/hero-poster.jpg`: AI-generated (Grok Imagine Video 1.5 Lite via OpenRouter) from owner-provided renders, 26.10.2026.
