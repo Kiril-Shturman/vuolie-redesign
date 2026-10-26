@@ -731,3 +731,9 @@ video.hero-bg{width:100%;object-fit:cover;transform:none}
 }
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;touch-action:pan-x pan-y}
 input,select,textarea{font-size:16px}
+/* mobile hero: stronger shade under the text block */
+@media(max-width:760px){
+ .hero:before{background:linear-gradient(180deg,#0d1f1773 0%,#0d1f1766 20%,#0d1f17a6 45%,#0d1f17b3 75%,#0d1f17d9 100%)!important}
+ .hero-copy{text-shadow:0 1px 16px #0b1a12cc,0 1px 3px #0b1a12b3}
+}
+@media(max-width:760px){.hero:before{background:linear-gradient(180deg,#0d1f17b3 0%,#0d1f17bf 35%,#0d1f17a6 60%,#0d1f1759 80%,#0d1f1799 100%)!important}}
