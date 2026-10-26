@@ -720,3 +720,12 @@ video.hero-bg{width:100%;object-fit:cover;transform:none}
  .m3-card{bottom:120px}.m3.opts-on .m3-card{bottom:300px}
  .m3-touch{top:50%}
 }
+/* mobile 3D: only minimap, no sun/time panel */
+@media(max-width:760px){
+ .m3-panel,.m3-stats,.m3-lead{display:none!important}
+ .m3-mini,.m3.opts-on .m3-mini{bottom:12px;left:10px;right:10px}
+ .m3-mini.folded{left:auto}
+ .m3-card,.m3.opts-on .m3-card{bottom:84px}
+ .m3:not(.opts-on) .m3-mini:not(.folded) ~ .m3-card{bottom:250px}
+ .m3-labels{pointer-events:none}
+}
