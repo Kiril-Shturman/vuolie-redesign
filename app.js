@@ -315,7 +315,7 @@ gallery.forEach((button,i)=>button.addEventListener('click',()=>{showImage(i);li
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18,className:'vu-tiles',attribution:'© OpenStreetMap'}).addTo(m);
   let r={km:61,min:70,line:[SPB,V]};try{r=await (await fetch('assets/route-spb.json')).json();}catch{}
   L.polyline(r.line,{color:'#ffffff',weight:9,opacity:.95,lineCap:'round',lineJoin:'round'}).addTo(m);
-  const route=L.polyline(r.line,{color:'#d9a648',weight:5,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(m);
+  const route=L.polyline(r.line,{color:'#eb6623',weight:5,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(m);
   const pin=L.divIcon({className:'vu-pin',html:'<div class="vu-pin-in"><img src="assets/logo.svg" alt=""></div><span>Вуолье</span>',iconSize:[52,52],iconAnchor:[26,52]});
   L.marker(V,{icon:pin,keyboard:false}).addTo(m);
   L.marker(SPB,{icon:L.divIcon({className:'vu-spb',html:'<i></i><span>Центр Петербурга</span>',iconSize:[16,16],iconAnchor:[8,8]}),keyboard:false}).addTo(m);

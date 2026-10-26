@@ -53,7 +53,7 @@ lake(1990,-760,620,520,1.3);
 // ---------- plots ----------
 const plotGroup=new THREE.Group();scene.add(plotGroup);
 const MAT={free:new THREE.MeshStandardMaterial({color:0x8fbf5e,roughness:.95}),sold:new THREE.MeshStandardMaterial({color:0x6f7d62,roughness:1}),
- fav:new THREE.MeshStandardMaterial({color:0xf0b8b8,roughness:.9}),sel:new THREE.MeshStandardMaterial({color:0xd9a648,roughness:.7,emissive:0x3a2600}),hover:new THREE.MeshStandardMaterial({color:0xeee49a,roughness:.8})};
+ fav:new THREE.MeshStandardMaterial({color:0xf0b8b8,roughness:.9}),sel:new THREE.MeshStandardMaterial({color:0xeb6623,roughness:.7,emissive:0x3a1200}),hover:new THREE.MeshStandardMaterial({color:0xf8c9a8,roughness:.8})};
 const edgeMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.85});
 const meshes=[];const info=new Map();
 for(const p of V.plots){const c=p.points.split(' ').map(Number);const s=new THREE.Shape();
@@ -189,7 +189,7 @@ mini.setAttribute('preserveAspectRatio','xMidYMid meet');applyVb();
 // filters
 const F={a:'all',s:'all',c:'status'};
 const prices=V.plots.map(p=>V.priceOf(p.id)).filter((v,i)=>v&&V.plots[i].id!==V.ANOMALY).sort((a,b)=>a-b);const q=k=>prices[Math.min(prices.length-1,Math.floor(prices.length*k/5))];const cuts=[q(1),q(2),q(3),q(4)];
-const TIER=[0xe9f2c8,0xc6e09a,0xf2d77c,0xeca95a,0xd9704a];const tierMats=TIER.map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.9}));
+const TIER=[0xe9f2c8,0xc6e09a,0xf5b183,0xef8a4a,0xd9704a];const tierMats=TIER.map(c=>new THREE.MeshStandardMaterial({color:c,roughness:.9}));
 const ghost=new THREE.MeshStandardMaterial({color:0x4f5d47,roughness:1});
 const tierOf=id=>{const pr=V.priceOf(id);if(!pr||V.isSold(id)||id===V.ANOMALY)return -1;return cuts.filter(c=>pr>=c).length;};
 function passes(p){const [lo,hi]=F.a.split('-').map(Number);if(F.a!=='all'&&!(p.area<=hi&&(lo===6?p.area>=lo:p.area>lo)))return false;
