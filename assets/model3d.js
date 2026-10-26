@@ -229,7 +229,7 @@ mini.addEventListener('click',e=>{if(mmoved){mmoved=false;return;}const pg=e.tar
  else if(!pg){const off=camera.position.clone().sub(controls.target);fly([w.x+off.x,camera.position.y,w.y+off.z],[w.x,0,w.y],1000);}});
 root.querySelector('#mm-fold').addEventListener('click',e=>{const open=miniBox.classList.toggle('folded');e.currentTarget.textContent=open?'+':'–';e.currentTarget.setAttribute('aria-expanded',String(!open));});
 // ---------- loop ----------
-function resize(){const w=canvasWrap.clientWidth,h=canvasWrap.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(mobile()&&!resize.done){controls.target.set(140,0,-60);camera.position.set(-120,820,820);resize.done=true;}needs=true;}
+function resize(){const w=canvasWrap.clientWidth,h=canvasWrap.clientHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();if(mobile()&&!resize.done){controls.target.set(150,0,10);camera.position.set(-40,600,560);resize.done=true;}needs=true;}
 new ResizeObserver(resize).observe(canvasWrap);resize();
 const tmp=new THREE.Vector3();
 function frame(t){requestAnimationFrame(frame);if(!visible)return;if(anim){anim(t);needs=true;}const moved=controls.update();if(!moved&&!needs)return;needs=false;
@@ -240,7 +240,7 @@ function frame(t){requestAnimationFrame(frame);if(!visible)return;if(anim){anim(
 controls.addEventListener('change',()=>{needs=true;});
 new IntersectionObserver(e=>{visible=e[0].isIntersecting;needs=true;},{rootMargin:'200px'}).observe(root);
 requestAnimationFrame(frame);
-applyFilters();updMini();if(mobile()){miniBox.classList.add('folded');root.querySelector('#mm-fold').textContent='+';}root.classList.add('ready');
+applyFilters();updMini();if(mobile()){miniBox.classList.add('folded');root.querySelector('#mm-fold').textContent='+';}root.querySelector('#m3-opts').addEventListener('click',e=>{const on=root.classList.toggle('opts-on');e.currentTarget.setAttribute('aria-expanded',String(on));});root.classList.add('ready');
 const tbtn=root.querySelector('#m3-touch');tbtn.addEventListener('click',()=>{const on=!root.classList.contains('touch-on');root.classList.toggle('touch-on',on);tbtn.textContent=on?'✓ Готово — листать страницу':'☝︎ Покрутить модель';});
 window.vuolie3d={renderer,scene,camera,controls,showStop,fly};
 }

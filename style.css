@@ -706,3 +706,17 @@ video.hero-bg{width:100%;object-fit:cover;transform:none}
 @media(max-width:900px){.about-grid{grid-template-columns:1fr}.about-map{aspect-ratio:1/1;max-height:none}}
 .vu-tiles{filter:grayscale(1) brightness(1.06) contrast(.9)}
 .about-map img.leaflet-tile{width:256.6px!important;height:256.6px!important}
+.m3-opts{display:none}
+@media(max-width:760px){
+ .m3{height:calc(100svh - 62px);min-height:620px}
+ .m3:before{background:linear-gradient(180deg,#0b161099 0%,transparent 16%,transparent 80%,#0b161080 100%)}
+ .m3-head{top:12px}.m3-head .eyebrow{margin-bottom:2px;font-size:10px}.m3-head h2{font-size:28px;margin:0}.m3-stats{display:none}
+ .m3-panel{padding:8px;gap:6px}
+ .m3:not(.opts-on) .m3-panel .m3-row{display:none}
+ .m3-tour{border-top:0;padding-top:0}
+ .m3-opts{display:block;width:34px;height:34px;border-radius:10px;border:1px solid #ffffff26;background:#ffffff0f;color:#fff;font-size:17px;flex:none}
+ .m3.opts-on .m3-opts{background:#f4f1e6;color:#13241a}
+ .m3-mini{bottom:64px}.m3.opts-on .m3-mini{bottom:178px}
+ .m3-card{bottom:120px}.m3.opts-on .m3-card{bottom:300px}
+ .m3-touch{top:50%}
+}
