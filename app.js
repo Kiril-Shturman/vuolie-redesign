@@ -327,3 +327,11 @@ gallery.forEach((button,i)=>button.addEventListener('click',()=>{showImage(i);li
 
 // ---- Bridge for the 3D model (assets/model3d.js) ----
 window.vuolie={plots,isSold,priceOf,money,fmt,ANOMALY,select:id=>selectPlot(id,{via:'3d'}),request:()=>openRequest('selected','3d'),isFav:id=>favorites.includes(id),toggleFav:id=>toggleFavorite(id)};
+
+// ---- Block page zoom (pinch / double-tap / gesture) — maps & 3D keep their own zoom ----
+(()=>{const own=e=>e.target.closest&&e.target.closest('.map-viewport,#m3-mini,.m3-canvas,.leaf');
+ ['gesturestart','gesturechange','gestureend'].forEach(t=>document.addEventListener(t,e=>{if(!own(e))e.preventDefault();},{passive:false}));
+ document.addEventListener('touchmove',e=>{if(e.touches.length>1&&!own(e))e.preventDefault();},{passive:false});
+ let last=0;document.addEventListener('touchend',e=>{const n=Date.now();if(n-last<300&&!own(e)&&!e.target.closest('input,textarea,select'))e.preventDefault();last=n;},{passive:false});
+ document.addEventListener('wheel',e=>{if(e.ctrlKey&&!own(e))e.preventDefault();},{passive:false});
+})();
