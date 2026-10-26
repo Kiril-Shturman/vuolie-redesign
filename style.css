@@ -742,3 +742,26 @@ input,select,textarea{font-size:16px}
 .m3:before{background:linear-gradient(90deg,#0b161080 0%,#0b161033 22%,transparent 40%)}
 @media(max-width:760px){.m3:before{background:linear-gradient(180deg,#0b161066 0%,transparent 14%)!important}}
 .button.gold:hover{background:#d9561a}
+/* ===== 3D layout v3: top toolbar, time bottom-left, tour bottom-centre, big minimap ===== */
+.m3-head{display:none}
+.m3:before{background:linear-gradient(180deg,#0b161040 0%,transparent 14%,transparent 82%,#0b161040 100%)}
+.m3-top{position:absolute;z-index:4;left:24px;top:20px;display:flex;gap:8px;padding:6px;background:#0f1d16d9;border:1px solid #ffffff1f;border-radius:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 14px 34px #0005}
+.m3-panel{left:24px;bottom:22px;top:auto!important;width:auto;max-width:430px;padding:12px 14px;gap:10px}
+.m3-panel .m3-stats{display:flex;gap:6px;margin:0}.m3-panel .m3-stats div{flex:1;background:#ffffff0d;border-color:#ffffff1a;padding:6px 10px}.m3-panel .m3-stats b{font-size:16px}
+.m3-seasons button{padding:7px 12px}
+.m3-tourbar{position:absolute;z-index:4;left:50%;transform:translateX(-50%);bottom:22px;display:flex;align-items:center;gap:6px;padding:6px 6px 6px 8px;background:#0f1d16d9;border:1px solid #ffffff1f;border-radius:999px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:0 14px 34px #0005;max-width:520px;color:#eef2e6}
+.m3-tourbar p{margin:0 6px;font-size:13px;line-height:1.25;min-width:230px}.m3-tourbar p b{color:var(--gold);margin-right:4px}.m3-tourbar p small{display:block;color:#b6c4ad;font-size:11.5px}
+.m3-tourbar button{width:36px;height:36px;border-radius:50%;border:1px solid #ffffff26;background:#ffffff0f;color:#fff;font-size:18px;flex:none}.m3-tourbar #m3-play{background:var(--gold);border-color:var(--gold)}.m3-tourbar #m3-play[aria-pressed=true]{background:#fff;color:var(--gold)}
+.m3-mini{top:20px;right:24px;width:480px}.m3-mini svg{height:340px!important}
+.m3-note{right:auto;left:50%;transform:translateX(-50%);bottom:4px;text-align:center;max-width:none;font-size:10px}
+@media(max-width:1180px){.m3-mini{width:400px}.m3-mini svg{height:260px!important}.m3-tourbar p{min-width:0}}
+@media(max-width:760px){.m3-top,.m3-tourbar{display:none!important}}
+.m3-panel .m3-stats span{font-size:9px;letter-spacing:1px;white-space:nowrap}.m3-panel .m3-stats b{font-size:15px;white-space:nowrap}
+.m3-mini{width:440px}.m3-mini svg{height:300px!important}
+@media(max-width:760px){.m3-mini{top:auto!important;width:auto}.m3-mini svg{height:150px!important}}
+@media(max-width:760px){
+ .m3 .m3-panel{display:block!important;top:10px!important;bottom:auto!important;left:10px;right:auto;padding:4px;border-radius:14px;max-width:none}
+ .m3 .m3-panel .m3-row:first-child,.m3 .m3-panel .m3-stats{display:none!important}
+ .m3 .m3-panel .m3-row{display:flex!important}
+ .m3-seasons button{padding:6px 9px;font-size:12px}
+}

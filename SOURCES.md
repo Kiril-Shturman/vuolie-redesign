@@ -26,3 +26,4 @@ and excluded from the advertised minimum and from narrowed budget results.
 - `assets/leaflet/`: Leaflet 1.9.4 (BSD-2). Map imagery: Esri World Imagery (attribution shown).
 - `assets/three/`: three.js r169 (MIT). `assets/model3d.js`: 3D model built from plots.json geometry; houses/trees are illustrative.
 - `assets/route-spb.json`: driving route St Petersburg centre → village, OSRM demo (OpenStreetMap data), simplified.
+- `assets/roads.png`, `assets/scene.json`: derived from masterplan.webp (road mask, centre-line dashes, lamp positions, pond outline, gate) — scripted, illustrative.
