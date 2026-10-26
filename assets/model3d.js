@@ -17,14 +17,14 @@ let needs=true,visible=false,selId=null,hovId=null;
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setPixelRatio(Math.min(devicePixelRatio,mobile()?1.6:2));
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.12;
 canvasWrap.append(renderer.domElement);
 const scene=new THREE.Scene();
 const camera=new THREE.PerspectiveCamera(38,1,1,8000);
 const controls=new OrbitControls(camera,renderer.domElement);
 controls.enableDamping=true;controls.dampingFactor=.08;controls.maxPolarAngle=Math.PI*.47;controls.minDistance=60;controls.maxDistance=1700;
 controls.target.set(40,0,40);camera.position.set(-330,430,640);
-scene.fog=new THREE.Fog(0xcfe0e8,900,2600);
+scene.fog=new THREE.Fog(0xcfe6f5,1300,3400);
 
 const hemi=new THREE.HemisphereLight(0xdfefff,0x3d5a2a,.75);scene.add(hemi);
 const sun=new THREE.DirectionalLight(0xffffff,2.4);sun.castShadow=true;
@@ -52,7 +52,7 @@ lake(1990,-760,620,520,1.3);
 
 // ---------- plots ----------
 const plotGroup=new THREE.Group();scene.add(plotGroup);
-const MAT={free:new THREE.MeshStandardMaterial({color:0xa7c47a,roughness:.95}),sold:new THREE.MeshStandardMaterial({color:0x6f7d62,roughness:1}),
+const MAT={free:new THREE.MeshStandardMaterial({color:0x8fbf5e,roughness:.95}),sold:new THREE.MeshStandardMaterial({color:0x6f7d62,roughness:1}),
  fav:new THREE.MeshStandardMaterial({color:0xf0b8b8,roughness:.9}),sel:new THREE.MeshStandardMaterial({color:0xd9a648,roughness:.7,emissive:0x3a2600}),hover:new THREE.MeshStandardMaterial({color:0xeee49a,roughness:.8})};
 const edgeMat=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:.85});
 const meshes=[];const info=new Map();
@@ -83,7 +83,7 @@ buildHouses();
 const crownG=new THREE.IcosahedronGeometry(1,0);crownG.translate(0,1,0);
 const spruceG=new THREE.ConeGeometry(1,2.6,7,1);spruceG.translate(0,1.3,0);
 const trunkG=new THREE.CylinderGeometry(.18,.24,1,5);trunkG.translate(0,.5,0);
-const leafA=new THREE.MeshStandardMaterial({color:0x3f7a35,roughness:.9,flatShading:true}),leafB=new THREE.MeshStandardMaterial({color:0x2a5a2c,roughness:.9,flatShading:true}),trunkM=new THREE.MeshStandardMaterial({color:0x5a4330,roughness:1});
+const leafA=new THREE.MeshStandardMaterial({color:0x5a9a45,roughness:.9,flatShading:true}),leafB=new THREE.MeshStandardMaterial({color:0x3d7a3c,roughness:.9,flatShading:true}),trunkM=new THREE.MeshStandardMaterial({color:0x5a4330,roughness:1});
 const NT=mobile()?5000:11000;
 const trees={crown:new THREE.InstancedMesh(crownG,leafA,NT),spruce:new THREE.InstancedMesh(spruceG,leafB,NT),trunk:new THREE.InstancedMesh(trunkG,trunkM,NT*2)};
 Object.values(trees).forEach(t=>{t.castShadow=true;t.receiveShadow=true;t.count=0;scene.add(t);});
@@ -114,16 +114,16 @@ function label(text,px,py,y=12,cls=''){const el=document.createElement('div');el
 label('<i></i>Въезд · КПП',2195,1169,14);label('<i></i>Пруд',2304,1953,8);label('<i></i>Озеро Сиркоярви · 500 м',1990,-760,10,'big');
 
 // ---------- sun ----------
-const LAT=60.33*Math.PI/180;let day=172,hour=15.5;
+const LAT=60.33*Math.PI/180;let day=172,hour=13;
 function sunPos(){const decl=23.44*Math.PI/180*Math.sin(2*Math.PI*(284+day)/365);const H=(hour-13.0)*15*Math.PI/180; // solar noon ≈ 13:00 local
  const alt=Math.asin(Math.sin(LAT)*Math.sin(decl)+Math.cos(LAT)*Math.cos(decl)*Math.cos(H));
  let az=Math.atan2(Math.sin(H),Math.cos(H)*Math.sin(LAT)-Math.tan(decl)*Math.cos(LAT))+Math.PI; return {alt,az};}
-const skyDay=new THREE.Color(0xbfd9ea),skyLow=new THREE.Color(0xf2b98a),skyNight=new THREE.Color(0x14202e);
+const skyDay=new THREE.Color(0xcfe6f5),skyLow=new THREE.Color(0xf2b98a),skyNight=new THREE.Color(0x14202e);
 function applySun(){const {alt,az}=sunPos();const R=1400;const ce=Math.cos(Math.max(alt,.02));
  sun.position.set(Math.sin(az)*ce*R,Math.sin(Math.max(alt,.02))*R,-Math.cos(az)*ce*R);sun.target.position.set(0,0,0);
  const k=Math.max(0,Math.min(1,alt/(20*Math.PI/180)));const night=alt<-.05;
- sun.intensity=night?0:0.4+2.2*k;sun.color.setHSL(.09+.04*k,.9-.7*k,.6+.35*k);
- hemi.intensity=night?.18:.35+.45*k;
+ sun.intensity=night?0:0.5+2.6*k;sun.color.setHSL(.09+.04*k,.9-.7*k,.6+.35*k);
+ hemi.intensity=night?.18:.45+.65*k;
  const sky=night?skyNight.clone():skyLow.clone().lerp(skyDay,k);scene.background=sky;scene.fog.color.copy(sky);
  const deg=Math.round(alt*180/Math.PI),dirs=['С','СВ','В','ЮВ','Ю','ЮЗ','З','СЗ'];
  root.querySelector('#m3-sun').innerHTML=(deg>0?deg+'°':'—')+' <small>'+(deg>0?dirs[Math.round(((az*180/Math.PI)%360)/45)%8]:'ночь')+'</small>';
